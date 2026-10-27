@@ -64,6 +64,7 @@ set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${GHVANHALEN_SOU
 
 # Sources
 set(GHVANHALEN_SOURCES
+    src/crowd.cpp
     src/framerate.cpp
     src/keyboard.cpp
     src/main.cpp

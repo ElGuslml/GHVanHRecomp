@@ -66,7 +66,17 @@ assuming 60 a second is corrected by `src/framerate.cpp` (`ghvanhalen_frame_rate
 (`sub_824C7020`, `sub_822E2A80`), the scripts' `Wait N gameframes` (`sub_8243F418`, `sub_8243F468`, `sub_8243F768`), the
 button presses the scripts poll every few frames (`sub_823AE218`, the script function ControllerMake `sub_823C97D8`),
 the whammy on a sustain (`sub_82153B88`, `sub_82156AF8`, `sub_82156CD8`: 5 frames become 5/60 s) and the loading
-screens' spinning icons (`sub_824D5508`, `sub_8240DAA0`, `sub_824D5880`). **Off:** 60 in the launcher.
+screens' spinning icons (`sub_824D5508`, `sub_8240DAA0`, `sub_824D5880`). Star power's drain (script `0x74B936AB`)
+is not held to 60 passes a second, as it takes the frame's time off the meter each frame: held, star power lasted
+160 / 60 times as long at 160 FPS (Gustavo, 2026-10-27). **Off:** 60 in the launcher.
+
+## The crowd's claps on star power
+
+The crowd claps on the beat while star power is on, but late by the player's audio calibration (the music moves with
+it, the claps do not; also on the console). The claps come from a script run on each fretbar event, which waits 0.18 s
+first: `src/crowd.cpp` (a hook in the script function Wait, `sub_823A5518`) takes the calibration off that wait, read
+from the game's globals (0x9D1315C9 less 0xEFEE50D3). Checked in GH Metallica by Gustavo (104 ms of calibration); here
+the same scripts and globals. **Off:** `ghvanhalen_crowd_claps_fix = false`.
 
 ## Ultrawide
 
