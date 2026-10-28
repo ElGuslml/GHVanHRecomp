@@ -100,11 +100,21 @@ audio_maxqframes = 4
 gamepad_subtype = 6
 # An Xbox 360 guitar reads its whammy bar half pressed until the bar first moves: at rest until then.
 guitar_whammy_rest = true
+# A PC microphone 12 dB quieter than Windows records it (usb_microphone_1, off until GH Van Halen
+# Launcher's Microphone chooses one): the game turns its own USB microphone down to the bottom of its
+# range for a song; a PC microphone at full level also hears the room and the speakers (GH Metallica's
+# first test, a condenser microphone at 0 dB: the pitch line jumped). The launcher's Gain row changes it.
+usb_microphone_1_gain = -12
+usb_microphone_2_gain = -12
 # Start pressed on a second controller: the game asks that controller to sign in, and only the first
 # has a profile. The sign-in UI closes as when the player cancels it, and the game shows its "not
 # signed in" message (sign in / continue without saving); the SDK default reported a sign-in change
 # and the game waited for that controller's profile forever on an empty screen.
 signin_ui_cancel = true
+# The other controllers are the profile's guests, as on the console (Name (1)): signed in, so the game
+# does not ask them to sign in, with no saves or settings of their own. The controller that presses a
+# button at the title screen is the profile's (ghvanhalen_profile_follows_press, src/players.cpp).
+signin_guests = true
 # The keyboard as a guitar (with mnk_mode; GH Van Halen Launcher's Keyboard page changes them): the frets
 # on D, F, J, K and L (green, red, yellow, blue, orange: A, B, Y, X, LB), strumming on the up and down
 # arrows (the D-pad), Star Power on Space or Backspace (Back), Start on Enter or X, the whammy bar on the
@@ -134,6 +144,18 @@ keybind_lstick_press = ""
 # arrows strum.
 mnk_tap_sources = "a,b,y,x,lb"
 mnk_tap_target = ""
+# The game's screen effects over the 3D image (src/screen_fx.cpp; the note highway and the HUD are drawn after
+# them): false turns one off. Bloom: the glow around lights. Depth of field: the background blurred in some camera
+# shots and behind the menus and the pause menu. Grain: the film grain. Color: the color correction (each venue's
+# look, fades to black, the image greyed while the rock meter is red); with it off the grain is off too (without the
+# color pass it is far stronger). Vignette: darkened corners, where a venue turns it on. Ink: the ink blotches a song
+# adds. true = as on the console.
+ghvanhalen_fx_bloom = true
+ghvanhalen_fx_depth_of_field = true
+ghvanhalen_fx_grain = true
+ghvanhalen_fx_color = true
+ghvanhalen_fx_vignette = true
+ghvanhalen_fx_ink = true
 )";
 
 uint32_t Crc32(const std::vector<char>& data) {

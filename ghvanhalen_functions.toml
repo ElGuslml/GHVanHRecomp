@@ -236,3 +236,10 @@ registers = ["f0"]
 address = 0x823A574C   # bne cr6 (sub_823A5518, the script function Wait, its seconds branch): r4 = the wait in ms, r30 = the script; src/crowd.cpp
 name = "GHVanHalenCrowdBeatWaitHook"
 registers = ["r4", "r30"]
+
+# The screen effects each turned off by an option (src/screen_fx.cpp, ghvanhalen_fx_*): the effects' composite
+# (sub_825311C8) picks its shader variant and sets each effect's constants by a mask, one bit per effect.
+[[midasm_hook]]
+address = 0x825313F0   # mr r11,r24 (sub_825311C8), after lwz r31,12(r25): r31 = the effects' mask
+name = "GHVanHalenScreenFxMaskHook"
+registers = ["r31"]

@@ -34,31 +34,26 @@ inline constexpr const char* kVersion = RECOMP_VERSION_STR;
 
 // --- The look ---
 
-// The title the art and the sidebar show: a small line above, the name below.
+// The title the Play page shows over the art: a small line above, the name below.
 inline constexpr const char* kArtKicker = "GUITAR HERO";
 inline constexpr const char* kArtTitle = "Van Halen";
-// The mark in the logo beside it (the sidebar, the first run): an icon's SVG paths in a 24-unit box, stroked as the
-// launcher's icons are (ui.cpp). A disc, until the game has its own.
+// The mark in the header's logo while the game's icon is unknown: an icon's SVG paths in a 24-unit box, stroked as the
+// launcher's icons are (ui.cpp). A guitar pick with a star (the mockup's, local_docs/launcher_design).
 inline constexpr const char* kBrandIcon =
-    "<circle cx='12' cy='12' r='9'/><circle cx='12' cy='12' r='2.5'/><path d='M12 3a9 9 0 0 1 9 9'/>";
-// The sidebar's name beside the logo, and the words before "LAUNCHER" under it; null: the art's title (kArtTitle) and
-// "LAUNCHER" alone.
-inline constexpr const char* kSidebarTitle = nullptr;
-inline constexpr const char* kSidebarSubtitle = nullptr;
-// Where the Play page crops its art (launcher\art\hero.svg) in a window of another shape: the point kept in view,
-// as fractions of the art's width and height.
-inline constexpr float kHeroFocusX = 0.7f;
-inline constexpr float kHeroFocusY = 0.4f;
+    "<path d='M12 21c-4-4-8-9-8-13 0-3 4-5 8-5s8 2 8 5c0 4-4 9-8 13z'/>"
+    "<path d='M12 6.5l1.2 2.6 2.8.3-2.1 1.9.6 2.8-2.5-1.4-2.5 1.4.6-2.8-2.1-1.9 2.8-.3z'/>";
+// The header's name beside the logo, on two lines (in capitals).
+inline constexpr const char* kBrandTitle = "Guitar Hero";
+inline constexpr const char* kBrandSubtitle = "Van Halen";
+// Where the art under the pages (launcher\art\background.svg, 1280 x 760) is cropped in a window of another shape: the
+// point kept in view, as fractions of its width and height. The band on the stage: in a wide window the stage stays
+// under the header, the crowd is cut.
+inline constexpr float kArtFocusX = 0.5f;
+inline constexpr float kArtFocusY = 0.3f;
 // The logo's mark on a disc instead of a rounded square.
 inline constexpr bool kBrandRound = false;
-// The first run's art panel: the game's name in a dark card over the art, with the tagline, instead of straight on
-// the art with the tagline at its foot.
-inline constexpr bool kInstallTitleCard = false;
-// The Play page's name and buttons in a black bar across the foot of the art, under a line of accent (the first run's
-// title card gets the same line), instead of straight on the art.
-inline constexpr bool kHeroTitleBar = false;
-// The titles in capitals: the pages', the Play page's name, the sidebar's and the first run's.
-inline constexpr bool kUppercaseTitles = false;
+// The titles in capitals, as the mockup draws them (the game's own texts that the launcher shows as titles).
+inline constexpr bool kUppercaseTitles = true;
 
 // --- The disc ---
 
@@ -131,12 +126,29 @@ inline constexpr std::array<Language, 5> kLanguages{{
     {6, "Italiano", nullptr, nullptr},
 }};
 
-// Switches of the game's own (src/), each a boolean cvar with a row in the Game page (game_types.h's Toggle); their
-// titles and hints are game.cpp's (GameTexts::toggles, in this order).
-inline constexpr std::array<Toggle, 0> kToggles{};
+// Switches of the game's own (src/), each a boolean cvar with a row in the Settings tab (game_types.h's Toggle); their
+// titles, hints and help are game.cpp's (GameTexts::toggles and toggle_help, in this order).
+// The screen effects (src/screen_fx.cpp, docs/screen-effects.md), all on as on the console: the grain only with the
+// color correction (without that pass the grain is far stronger, Gustavo's rule).
+inline constexpr std::array<Toggle, 6> kToggles{{
+    {"ghvanhalen_fx_bloom", true, ToggleGroup::kScreenEffects},
+    {"ghvanhalen_fx_depth_of_field", true, ToggleGroup::kScreenEffects},
+    {"ghvanhalen_fx_color", true, ToggleGroup::kScreenEffects},
+    {"ghvanhalen_fx_grain", true, ToggleGroup::kScreenEffects, "ghvanhalen_fx_color"},
+    {"ghvanhalen_fx_vignette", true, ToggleGroup::kScreenEffects},
+    {"ghvanhalen_fx_ink", true, ToggleGroup::kScreenEffects},
+}};
 
-// The Settings group has a Game page (page_game.cpp) when the game has a language row or switches.
-inline constexpr bool kHasGamePage = !kLanguages.empty() || !kToggles.empty();
+// Whether some switch is in `group`.
+constexpr bool HasToggles(ToggleGroup group) {
+  for (const Toggle& toggle : kToggles) {
+    if (toggle.group == group) return true;
+  }
+  return false;
+}
+
+// The Settings tab has a Game category (page_settings.cpp) when the game has a language row or switches of its own.
+inline constexpr bool kHasGamePage = !kLanguages.empty() || HasToggles(ToggleGroup::kGame);
 
 // --- Downloadable content ---
 
@@ -176,6 +188,17 @@ inline constexpr std::array<KeyDefault, 19> kKeyboardDefaults{{
 // Its title and hint are game.cpp's (GameTexts::keyboard_tap_title, keyboard_tap_hint).
 inline constexpr const char* kKeyboardTapTarget = "dpad_down";
 
+// --- Singing ---
+
+// The Controls tab's microphone and each controller's part (page_controls.cpp): a recording device of the PC as each of
+// the game's two USB microphones (the SDK's usb_microphone_1 and _2, recomp change 55), and a controller playing the
+// game's instrument (gamepad_subtype's guitar, src/startup.cpp) or singing (a plain gamepad, XInput subtype 1, which the
+// game gives the vocals; the SDK's gamepad_device_subtypes, change 56). Real guitars and drum kits keep their own.
+// Their names are GameTexts::part_instrument and part_vocals.
+inline constexpr bool kHasMicrophones = true;
+// The microphone's gain (usb_microphone_1_gain) until the player changes it, and the Microphone's Reset: src/startup.cpp's.
+inline constexpr int kMicrophoneGainDefault = -12;
+
 // --- The controls in the game's words ---
 
 // The game's functions (game_types.h's GameControl) in groups, in the launcher's language (game.cpp); empty: the pages show the Xbox 360 controls
@@ -190,6 +213,8 @@ struct GameTexts {
   const char* welcome_text;
   // kToggles' rows: a title and a hint each.
   std::array<const char*, kToggles.size() * 2> toggles;
+  // kToggles' help, the Settings tab's panel for the row in focus; null: the hint.
+  std::array<const char*, kToggles.size()> toggle_help{};
   // The first run's last screen (the game installed), in the game's spirit; null: the launcher's own.
   const char* done_title = nullptr;
   const char* done_text = nullptr;
@@ -198,16 +223,12 @@ struct GameTexts {
   // The first run's extraction screen (while it runs), in the game's spirit; null: the launcher's own.
   const char* extracting_title = nullptr;
   const char* extracting_text = nullptr;
-  // The Gamepad page's name in the sidebar, its title and subtitle; null: the launcher's own ("Gamepad").
-  const char* gamepad_nav = nullptr;
-  const char* gamepad_title = nullptr;
-  const char* gamepad_subtitle = nullptr;
-  // The Keyboard and Gamepad pages' first column with GameControlsFor's functions ("Game function"); null: the
-  // launcher's own (the Xbox 360 control).
-  const char* functions_column = nullptr;
-  // The Keyboard page's switch for kKeyboardTapTarget.
+  // The Controls tab's keyboard switch for kKeyboardTapTarget, and its tip in the help.
   const char* keyboard_tap_title = nullptr;
   const char* keyboard_tap_hint = nullptr;
+  // kHasMicrophones: a controller's two parts, the game's instrument and the singer's; null: the launcher's words.
+  const char* part_instrument = nullptr;
+  const char* part_vocals = nullptr;
 };
 // In the language of the launcher's texts (an XLanguage); missing ones fall back to English.
 const GameTexts& GameTextsFor(uint32_t language);

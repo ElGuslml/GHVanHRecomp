@@ -70,7 +70,9 @@ set(GHVANHALEN_SOURCES
     src/main.cpp
     src/native_x_renderer_ghvanhalen.cpp
     src/options.cpp
+    src/players.cpp
     src/quit_prompt.cpp
+    src/screen_fx.cpp
     src/startup.cpp
     src/thread_waits.cpp
     src/timer.cpp

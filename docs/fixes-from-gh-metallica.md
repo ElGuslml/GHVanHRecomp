@@ -1,6 +1,7 @@
 # The fixes ported from GH Metallica
 
-**Status: working (2026-10-26).** Guitar Hero: Van Halen is Guitar Hero: Metallica's engine (the executable
+**Status: working (2026-10-26; GH Metallica's of 2026-10-27 and 28 added on 2026-10-28: the profile following the
+controller that starts the game, the screen effects' switches, the PC microphone, the menu bars beside the image).** Guitar Hero: Van Halen is Guitar Hero: Metallica's engine (the executable
 `gh4_3_Final.exe`, Metallica's `gh4_1_burn_Final.exe`; both XDK 2.0.7978): its first boot had GH Metallica's problems
 (five cores busy in the menus, among others). GHMetalRecomp's fixes were copied with their names changed and every
 address translated: a function matcher over both executables' instruction indexes found each hooked function, and every
@@ -58,6 +59,14 @@ Start on a controller other than the first left an empty screen: the game asks t
 (`XamShowSigninUI`) and waited for it forever. `signin_ui_cancel = true` answers as a cancel does on the console: the
 game shows its "not signed in" message, and Continue without saving goes on.
 
+Since 2026-10-28 (GH Metallica's of 2026-10-26) the profile follows the controller that starts the game, as on the
+console: while the title screen is shown (`src/players.cpp`, from the quit prompt's frame hook that finds the title's
+text), the SDK swaps the controller that presses a button with the first one, so it plays with the profile and its
+saves (the log: "The controller in slot 1 pressed first: it is now slot 0, the profile's"). The other controllers are
+the profile's guests (`signin_guests = true`, "Name (1)"): signed in, with the game's default settings and no saves.
+**Off:** `--ghvanhalen_profile_follows_press=false` (the first controller connected plays with the profile),
+`signin_guests = false` (the "not signed in" message again).
+
 ## Frame rates above 60
 
 **Experimental.** `ghvanhalen_frame_rate` (60, 120, 144, 160, 165, 240; the launcher's frame rate row) sets the
@@ -83,9 +92,31 @@ the same scripts and globals. **Off:** `ghvanhalen_crowd_claps_fix = false`.
 The same as GH Metallica's (`src/widescreen.cpp`, 8 hooks): every 16:9 perspective is widened by the screen's factor
 when the engine builds it (`sub_823688F8`, Hor+), and the 2D layer (sprites, text, the highway's board, the tails, the
 hit sparks, the loading screens, the clip windows) is narrowed to 16:9 in the center; outside a song black bars cover
-the sides. With NativeXRenderer the image is rendered at the screen's aspect ratio. **Off:** 16:9 in the launcher
+the sides. With NativeXRenderer the image is rendered at the screen's aspect ratio, or at another one (16:9, 21:9,
+32:9; NativeXRenderer D104, `native_x_renderer_aspect`, the launcher's image format), and the menus' bars are placed
+at the sides of the image, not of the window. **Off:** 16:9 in the launcher
 (`ghvanhalen_ultrawide = false`); `ghvanhalen_ultrawide_hud = false` stretches the 2D layer; `ghvanhalen_menu_bars =
 false` shows the room behind the menus at their sides.
+
+## Turning off the screen effects
+
+**Options, all on by default** (GH Metallica's of 2026-10-28): the engine's screen effects work on the 3D image (the
+note highway and the HUD are drawn after them), and its final composite (`sub_825311C8`, the same code as GH
+Metallica's) applies six of them in one pass, by a mask with a bit each. `src/screen_fx.cpp` (a hook at `0x825313F0`)
+takes the bits of the effects turned off out of that mask: `ghvanhalen_fx_bloom`, `_depth_of_field`, `_grain`,
+`_color`, `_vignette` and `_ink` (the ink blotches a song adds in GH Metallica; not seen in this game yet). With the
+color correction off the grain is off too (that pass also tones it down). GH Van Halen Launcher's switches are under
+Settings → Graphics; the F4 settings overlay applies them at once.
+
+## Singing with a PC microphone
+
+**Experimental, not tried in this game yet** (GH Metallica's of 2026-10-28, where Gustavo sang and scored). The game
+looks for an Xbox 360 USB microphone; the SDK answers with a recording device of the PC (`usb_microphone_1`, SDK
+change 55; `usb_microphone_1_gain = -12` in `ghvanhalen.toml`, as a PC microphone at full level also hears the room),
+and the singer's controller gets an ordinary gamepad's subtype, which the game gives the vocals, while the others are
+guitars (`gamepad_device_subtypes`, change 56). GH Van Halen Launcher's Controls tab sets both: the Microphone under
+the keyboard (device, channel, gain, level) and each controller's Instrument row (Guitar or Vocals). **Off:**
+`usb_microphone_1 = ""` (the default: the launcher's Microphone: None).
 
 ## Quitting from the main menu
 
