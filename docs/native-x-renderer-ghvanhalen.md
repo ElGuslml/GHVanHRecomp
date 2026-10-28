@@ -32,3 +32,12 @@ POTCAWE's) holds here; only the addresses differ.
   8.33 ms frames.
 - recomp-tools' `Test-Games.ps1` runs the game to its first screen with both renderers, with NativeXRenderer's
   observer.
+
+## The instruments' textures (1_5_5_5)
+
+**Symptom (2026-10-28, Gustavo):** in the career's intro, Eddie Van Halen's guitar was white (lavender under the stage
+lights), with only its relief; on the Xenos path it has its striped finish. **Cause:** the instruments' color textures
+are 16-bit 1_5_5_5, a format NativeXRenderer had no host format for: their bindings sampled its white placeholder.
+**Fix:** NativeXRenderer D105 loads them as the SDK's backends do (B5G5R5A1, with DiligentCore patch 0008 mapping it
+to Vulkan's A1R5G5B5). Checked: the intro with 0 placeholder bindings and the guitar as on the Xenos path. **Off:**
+none; the Xenos path (`native_x_renderer = false`) never had the problem.
