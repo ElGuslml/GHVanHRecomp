@@ -1,7 +1,8 @@
 # The fixes ported from GH Metallica
 
 **Status: working (2026-10-26; GH Metallica's of 2026-10-27 and 28 added on 2026-10-28: the profile following the
-controller that starts the game, the screen effects' switches, the PC microphone, the menu bars beside the image).** Guitar Hero: Van Halen is Guitar Hero: Metallica's engine (the executable
+controller that starts the game, the screen effects' switches, the PC microphone, the menu bars beside the image; on
+2026-10-29 a controller played as a guitar).** Guitar Hero: Van Halen is Guitar Hero: Metallica's engine (the executable
 `gh4_3_Final.exe`, Metallica's `gh4_1_burn_Final.exe`; both XDK 2.0.7978): its first boot had GH Metallica's problems
 (five cores busy in the menus, among others). GHMetalRecomp's fixes were copied with their names changed and every
 address translated: a function matcher over both executables' instruction indexes found each hooked function, and every
@@ -52,6 +53,13 @@ guitar and the kick drum are heard).
 - The keyboard as a guitar (`mnk_mode`): frets D F J K L, strum the arrow keys, Star Power Space; GH Van Halen
   Launcher's Keyboard page changes them. Its switch to strum on each fret (`mnk_tap_target = "dpad_down"`) is active
   only in a song (`src/keyboard.cpp`, a hook at `sub_82148478`).
+- A controller playing guitar (GH Metallica's of 2026-10-28, SDK change 57): its frets (A, B, Y, X, LB) can strum as
+  they are pressed too, with the same switch on each controller's page of the launcher's Controls tab
+  (`gamepad_tap_target`; `gamepad_tap_sources` in `ghvanhalen.toml`), under the same gate. Its whammy bar, the right
+  stick, acted 43 % pressed on every sustain (a centred stick is 0, and the game's bar rests at -0.76 of the axis):
+  `gamepad_whammy_rest = true` makes the bar at rest while the stick is centred, and fully pressed with the stick
+  pushed to either side; the keyboard's Right arrow the same. **Off:** the switch, or `gamepad_tap_target = ""`;
+  `gamepad_whammy_rest = false`.
 
 ## A second controller
 

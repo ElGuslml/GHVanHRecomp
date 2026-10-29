@@ -9,5 +9,5 @@ with every address translated; the investigations are GHMetalRecomp's.
 
 | Note | Status |
 |---|---|
-| [The fixes ported from GH Metallica](fixes-from-gh-metallica.md) | Working: the threads' waits, the song clock, the audio, the guitar and the keyboard, the second controller (the profile follows the controller that starts the game), frame rates above 60, ultrawide, the screen effects' switches, quitting from the main menu; singing with a PC microphone experimental |
+| [The fixes ported from GH Metallica](fixes-from-gh-metallica.md) | Working: the threads' waits, the song clock, the audio, the guitar, the keyboard and a controller as a guitar, the second controller (the profile follows the controller that starts the game), frame rates above 60, ultrawide, the screen effects' switches, quitting from the main menu; singing with a PC microphone experimental |
 | [NativeXRenderer in Guitar Hero: Van Halen](native-x-renderer-ghvanhalen.md) | Working: GH Metallica's map and profile, translated (off by default) |
