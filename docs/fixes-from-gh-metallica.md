@@ -2,7 +2,8 @@
 
 **Status: working (2026-10-26; GH Metallica's of 2026-10-27 and 28 added on 2026-10-28: the profile following the
 controller that starts the game, the screen effects' switches, the PC microphone, the menu bars beside the image; on
-2026-10-29 a controller played as a guitar).** Guitar Hero: Van Halen is Guitar Hero: Metallica's engine (the executable
+2026-10-29 a controller played as a guitar; on 2026-10-30 each controller's own layout and the whammy bar's
+calibration, V-Sync in step with the display, the music kept with the notes after stutters, low latency audio).** Guitar Hero: Van Halen is Guitar Hero: Metallica's engine (the executable
 `gh4_3_Final.exe`, Metallica's `gh4_1_burn_Final.exe`; both XDK 2.0.7978): its first boot had GH Metallica's problems
 (five cores busy in the menus, among others). GHMetalRecomp's fixes were copied with their names changed and every
 address translated: a function matcher over both executables' instruction indexes found each hooked function, and every
@@ -36,6 +37,37 @@ behind the notes. **Fix:** `src/timer.cpp`, a hook in `sub_822E2C58` (0x822E2CF8
 **Off:** `ghvanhalen_timer_fix = false`. `ghvanhalen.toml` also sets `audio_maxqframes = 4`, the SDK's shortest output
 queue (21 ms less audio delay).
 
+**After a stutter** (GH Metallica's of 2026-10-30, its `docs/song-stutters.md`): the notes follow real time, the music
+the frames of sound played, so a thread held up on the PC left the music behind the notes until a pause (in GH
+Metallica, FMOD's mixer 150 ms late every 5 s: 1.5 s behind after a minute). Three fixes, measured there with stalls
+forced on purpose:
+- `src/fmod_mix.cpp`: FMOD's polled output (`sub_82291F38`) is updated on the SDK's audio worker right after each frame
+  the game's render client (`sub_8223A3B0`) reads (the same code as GH Metallica's, 0x11978 further), so a late FMOD
+  thread loses no block (+1495 ms -> +1.2 ms). **Off:** `ghvanhalen_fmod_on_audio_thread = false`.
+- `audio_keep_time = true` (SDK change 62): silence played for a late frame is made up by dropping as many of the next
+  ones, a short skip in sync (the audio worker 30 ms late every second: +819 ms -> +0.6 ms). **Off:** `false`.
+- `audio_thread_priority = true` (SDK change 63): the audio threads in Windows' "Pro Audio" class. **Off:** `false`.
+
+## Low latency audio
+
+**Off by default** (GH Metallica's of 2026-10-30, its `docs/audio-latency.md`; SDK change 64): GH Van Halen Launcher's
+Settings → Game → Low latency audio (`audio_wasapi_exclusive`) takes the output device in exclusive mode (WASAPI),
+past Windows' audio engine, with 10 ms kept in the device's buffer (`audio_wasapi_exclusive_buffer_ms`) and 2 of the
+game's frames queued instead of 4 (`audio_wasapi_exclusive_queue`). Measured in GH Metallica on a Focusrite Scarlett
+2i2, from the game's frame to the driver playing it: 77 ms shared, 20 ms exclusive. Other programs cannot play on that
+device while the game runs; when it is busy or refuses, the shared output is used (the log says which). Calibrate the
+audio again after turning it on or off.
+
+## V-Sync
+
+**On by default** (GH Metallica's of 2026-10-29 and 30, its `docs/vsync.md`): GH Van Halen Launcher's Settings →
+Graphics → V-Sync writes NativeXRenderer's `native_x_renderer_present_mode` (`"vsync"`: FIFO, D106/D107; `"immediate"`
+for a G-Sync or FreeSync display) and the SDK's `vblank_follows_display` (change 61): the game's vertical blank, its
+clock for frames, follows the monitor's where the frame rate is the refresh rate or a whole fraction of it, so the
+game never runs ahead of the display. Measured in GH Metallica at 160 FPS on a 160 Hz display: 4 ms from present to
+display, no frame dropped (NVIDIA's MAILBOX queued three frames: 16-19 ms); at 60 FPS on a 60 Hz display a steady
+16.5 ms, presents 99.8 % regular. Calibrate the video again after changing it.
+
 ## Noise instead of music, and the songs' tracks
 
 The game's audio library (FMOD) mixes when its read position moves to the next block of a short ring, and the songs are
@@ -60,6 +92,13 @@ guitar and the kick drum are heard).
   `gamepad_whammy_rest = true` makes the bar at rest while the stick is centred, and fully pressed with the stick
   pushed to either side; the keyboard's Right arrow the same. **Off:** the switch, or `gamepad_tap_target = ""`;
   `gamepad_whammy_rest = false`.
+- Third-party guitars (GH Metallica's of 2026-10-29, reported with CRKD guitars; SDK changes 59 and 60, RecompLauncher
+  3.4): each controller keeps its own assignments, by its serial number or GUID (`gamepad_device_remap`; a guitar and
+  an Xbox 360 controller shared one layout); while the launcher waits for a button a trigger counts only once pressed
+  past 90 % from released (a guitar's accelerometer is on its triggers, at half when still); a gamepad whose right
+  stick's X rests at -32768 is a whammy bar, not a stick pushed all the way; and the Controls page's Whammy bar row
+  shows how far the game reads the bar, with a calibration (push the bar all the way, hold, let go:
+  `gamepad_whammy_calibration`). **Off:** Reset on the row.
 
 ## A second controller
 

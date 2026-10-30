@@ -93,6 +93,27 @@ audio_callback_min_interval_us = 3000
 # delay between a strum and its sound than the SDK's 8. With the calls spaced the queue stays full
 # (no gap in a whole song, measured); the game's calibration covers what is left. 8 = the SDK default.
 audio_maxqframes = 4
+# The SDK's audio threads (its audio worker runs the game's sound callback and, with ghvanhalen_fmod_on_audio_thread,
+# FMOD's mixing) in Windows' multimedia class "Pro Audio", as the sound device's thread: a busy PC holds them up less.
+# false = normal priority (the SDK default).
+audio_thread_priority = true
+# When the game's sound still comes late (its audio thread held up longer than the 21 ms queue), the silence played
+# meanwhile is made up by dropping as many of its next frames: a short skip, and the music stays with the notes (the
+# SDK default, false, plays the rest of the song that much late, until a pause).
+audio_keep_time = true
+# GH Van Halen Launcher's "Low latency audio" (audio_wasapi_exclusive, off by default) takes the output device in
+# exclusive mode, past Windows' audio engine. With it, 10 ms kept in the device's buffer and 2 of the game's frames
+# queued instead of 4: on a Focusrite Scarlett 2i2, 20 ms from the game's frame to the driver playing it, where the
+# shared output takes 77 ms (measured in GH Metallica). Without it these do nothing.
+audio_wasapi_exclusive_buffer_ms = 10
+audio_wasapi_exclusive_queue = 2
+# V-Sync (GH Van Halen Launcher's row writes both): NativeXRenderer presents with FIFO, each frame shown once and never
+# torn, and the game's vertical blank follows the monitor's where the frame rate is its refresh rate or a whole
+# fraction of it, so the game never runs ahead of the display. Measured in GH Metallica at 160 FPS on a 160 Hz display:
+# 4 ms from present to display, no frame dropped (MAILBOX with the SDK's timer: 16-19 ms, NVIDIA queuing three
+# frames). "immediate" and false = V-Sync off (tearing, or a G-Sync / FreeSync display following the game).
+native_x_renderer_present_mode = "vsync"
+vblank_follows_display = true
 # Report a controller (and the keyboard's emulated one) as a guitar: the game gives a plain gamepad
 # the vocals, which need a microphone. Frets on A (green), B (red), Y (yellow), X (blue) and LB
 # (orange), strumming on the D-pad, the whammy bar on the right stick, Star Power on Back. A real
