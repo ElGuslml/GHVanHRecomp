@@ -88,6 +88,10 @@ inline constexpr bool kHasNativeXRenderer = GAME_HAS_NATIVE_X_RENDERER;
 // The renderer chosen until the player picks one (an options file without native_x_renderer): NativeXRenderer once a
 // full play test has gone through it (as in POTCAWE, its D56), the Xenos path until then.
 inline constexpr bool kNativeXRendererDefault = false;
+// The antialiasing row's DLAA (NativeXRenderer's D47: NVIDIA DLSS on the main 3D view, jittered): only for a game whose
+// hooks mark its views (native_x_renderer::BeginView and EndViewGeometry, as POTCAWE's). This one does not: DLAA would
+// turn SMAA and FXAA off and DLSS never run. The row offers SMAA, FXAA and none.
+inline constexpr bool kHasDlaa = false;
 
 // The Graphics page's shadow quality row: NativeXRenderer draws the game's shadow maps at a scale of their own
 // (native_x_renderer_shadow_scale, its D92): at least twice or four times the game's resolution. Only where it
@@ -138,17 +142,6 @@ inline constexpr std::array<Toggle, 6> kToggles{{
     {"ghvanhalen_fx_vignette", true, ToggleGroup::kScreenEffects},
     {"ghvanhalen_fx_ink", true, ToggleGroup::kScreenEffects},
 }};
-
-// Whether some switch is in `group`.
-constexpr bool HasToggles(ToggleGroup group) {
-  for (const Toggle& toggle : kToggles) {
-    if (toggle.group == group) return true;
-  }
-  return false;
-}
-
-// The Settings tab has a Game category (page_settings.cpp) when the game has a language row or switches of its own.
-inline constexpr bool kHasGamePage = !kLanguages.empty() || HasToggles(ToggleGroup::kGame);
 
 // --- Downloadable content ---
 
