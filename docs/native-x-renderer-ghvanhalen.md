@@ -8,7 +8,9 @@ on the host). The hooks and the profile are in
 **Status (2026-10-26):** GH Metallica's side, translated. Both games link the same XDK Direct3D library (2.0.7978)
 and the same engine, so GH Metallica's map (GHMetalRecomp's `docs/native-x-renderer-ghmetallica.md`: the device
 layout, Dante's Inferno's up to the register shadow; the current objects POTCAWE's + 144; the resource objects
-POTCAWE's) holds here; only the addresses differ.
+POTCAWE's) holds here; only the addresses differ. The default renderer from the first release on (0.1.0,
+2026-10-29: `kNativeXRendererDefault` in `launcher/game.h`); `--native_x_renderer=false` or the launcher's Xenos
+card draws with the Xenos path.
 
 ## The addresses
 
