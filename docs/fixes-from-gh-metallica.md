@@ -3,7 +3,8 @@
 **Status: working (2026-10-26; GH Metallica's of 2026-10-27 and 28 added on 2026-10-28: the profile following the
 controller that starts the game, the screen effects' switches, the PC microphone, the menu bars beside the image; on
 2026-10-29 a controller played as a guitar; on 2026-10-30 each controller's own layout and the whammy bar's
-calibration, V-Sync in step with the display, the music kept with the notes after stutters, low latency audio).** Guitar Hero: Van Halen is Guitar Hero: Metallica's engine (the executable
+calibration, V-Sync in step with the display, the music kept with the notes after stutters, low latency audio; on
+2026-11-04 the audio on slower PCs).** Guitar Hero: Van Halen is Guitar Hero: Metallica's engine (the executable
 `gh4_3_Final.exe`, Metallica's `gh4_1_burn_Final.exe`; both XDK 2.0.7978): its first boot had GH Metallica's problems
 (five cores busy in the menus, among others). GHMetalRecomp's fixes were copied with their names changed and every
 address translated: a function matcher over both executables' instruction indexes found each hooked function, and every
@@ -48,6 +49,17 @@ forced on purpose:
   ones, a short skip in sync (the audio worker 30 ms late every second: +819 ms -> +0.6 ms). **Off:** `false`.
 - `audio_thread_priority = true` (SDK change 63): the audio threads in Windows' "Pro Audio" class. **Off:** `false`.
 
+**Crackling, or the sound muting with low latency audio, on slower PCs** (GH Metallica's of 2026-11-04, its
+`docs/audio-crackling.md`; a GH Metallica player's report): the audio calls were spaced at least 3 ms apart
+(`audio_callback_min_interval_us = 3000`, below), so a frame of sound (5.3 ms) took its work plus 3 ms, and past about
+2.2 ms of work the sound never kept up: hundreds of short gaps a second on the normal output, and on the low latency
+one the catch-up dropping the frame the device waited for, a silence that fed itself. Now
+`audio_callback_min_interval_us = 0` (FMOD mixes on the audio worker, so the spacing protects nothing; a
+`ghvanhalen.toml` that still has `3000` is changed once at startup, a value chosen by hand stays), and SDK change 69:
+the catch-up never drops a frame the device is about to take. Measured in GH Metallica with its audio thread made
+slower on purpose: 3401 gaps in 40 s before, none after; a 150 ms hold-up costs 138 ms of sound once (400 ms and more
+gaps before).
+
 ## Low latency audio
 
 **Off by default** (GH Metallica's of 2026-10-30, its `docs/audio-latency.md`; SDK change 64): GH Van Halen Launcher's
@@ -72,8 +84,8 @@ display, no frame dropped (NVIDIA's MAILBOX queued three frames: 16-19 ms); at 6
 
 The game's audio library (FMOD) mixes when its read position moves to the next block of a short ring, and the songs are
 several stereo streams interleaved packet by packet in one XMA file. Both are SDK options set in `ghvanhalen.toml`:
-`audio_callback_min_interval_us = 3000` (the audio output called at the console's pace; without it the menu music is
-noise) and the SDK's XMA decoder carrying each packet's skip count into the next buffer (always on; without it only the
+`audio_callback_min_interval_us` (3000 until 2026-11-04: the audio output called at the console's pace, without which
+FMOD's own thread missed blocks and the menu music was noise; 0 since FMOD mixes on the audio worker, above) and the SDK's XMA decoder carrying each packet's skip count into the next buffer (always on; without it only the
 guitar and the kick drum are heard).
 
 ## The guitar and the keyboard
