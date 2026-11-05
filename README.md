@@ -120,7 +120,7 @@ Everything is set up from **GH Van Halen Launcher**, with the mouse, the keyboar
 | ▶️ **Play** | Start the game, and see your settings, achievements and updates at a glance. |
 | 🏆 **Achievements** | All 46 achievements, the ones you have unlocked and when. |
 | 🎮 **Controls** | Your guitars, controllers and keyboard: what each button or key does, and which controller sings. The keyboard as a guitar (experimental). Frets that strum as you press them, on a controller or the keyboard. Your microphone (experimental): device, gain and level. |
-| ⚙️ **Settings** | **Game:** the language. **Video:** monitor, fullscreen or window, resolution, image format (fill a wide screen or keep 16:9). **Graphics:** renderer, frame rate, antialiasing, texture sharpness, the game's screen effects. |
+| ⚙️ **Settings** | **Game:** the language. **Video:** monitor, fullscreen or window, resolution, image format (fill a wide screen or keep 16:9), upscaling (AMD FSR 1, NVIDIA NIS) and sharpness, V-Sync (on by default: no tearing, without V-Sync's usual delay; leave it on with a G-Sync or FreeSync monitor too). **Graphics:** renderer, frame rate, antialiasing, texture sharpness, the game's screen effects. |
 | 🔄 **Updates** | Your version, and new ones when they come out. |
 | 👤 **Profile** | Your picture at the top right: hours played, streaks, your week, your games and your favorite achievements. |
 
@@ -151,7 +151,8 @@ Your choices are saved as soon as you make them. When you quit the game, the lau
 Something looks wrong, sounds wrong, or crashes? Tell us on [Discord](https://discord.gg/XQtM5TmNs8) or open an
 [issue](https://github.com/ElGuslml/GHVanHRecomp/issues), with:
 - where in the game it happened, and a screenshot if you can;
-- the latest file in the `logs` folder next to the game.
+- the latest files in the `logs` folder next to the game: `ghvanhalen_NNN.log`, and if the launcher misbehaved,
+  `launcher_NNN.log` (with its `.dmp` file if there is one).
 
 If something looks wrong, try the other renderer: in the launcher, **Graphics → Xenos** (it emulates the Xbox 360's
 graphics instead), and tell us whether it happens there too.

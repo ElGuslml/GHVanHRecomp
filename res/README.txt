@@ -70,13 +70,17 @@ when you press PLAY.
     them, in songs.
   - Keyboard (experimental): turn on "Play with keyboard and mouse" to play with the keyboard as a guitar
     (frets D F J K L, strum with the Up and Down arrows, Star Power with Space, Start with Enter), and change
-    any key. "Strum when a fret is pressed" makes each fret strum as you press it, in songs.
+    any key. "Strum when a fret is pressed" makes each fret strum as you press it, in songs. Shift, Ctrl
+    and Alt can be keys of their own (press and release one alone): each side is a separate key, so Left
+    Alt can be Star Power. F1 to F12 can be assigned too: a key on a control only presses that control.
   - Microphone (experimental): the microphone you sing with, its channel and gain, and its level (see
     SINGING).
 - Settings:
   - Video: the monitor, fullscreen, borderless or window, the resolution, the image format (fill a screen
     wider than 16:9, where the stage is seen wider while the note highway, the HUD and the menus stay 16:9
-    in the center, or keep 16:9 with bars) and the internal resolution the game is drawn at.
+    in the center, or keep 16:9 with bars), the internal resolution the game is drawn at, upscaling (AMD
+    FSR 1 or NVIDIA NIS, from fewer lines than the screen's) and sharpness, and V-Sync (on by default: no
+    tearing, and no extra delay; leave it on with a G-Sync or FreeSync monitor too).
   - Graphics: the renderer, the frame rate, antialiasing and anisotropic filtering. NativeXRenderer (the
     default) draws the game natively with Vulkan; Xenos emulates the Xbox 360 GPU instead (DirectX 12 or
     Vulkan): choose it if something looks wrong with NativeXRenderer, and tell us where. Frame rate: 60 FPS
@@ -84,7 +88,8 @@ when you press PLAY.
     keep their speed and stay in sync at every frame rate. The game's screen effects can be turned off one by
     one.
   - Game: the language (English, French, German, Italian or Spanish; the game has no language menu of its
-    own).
+    own). Debug keys (off by default): F3, F4 and ` open the developer's windows in the game (frame times,
+    settings, console).
 - Updates: the launcher checks for a new version when it starts (you can turn that off) and installs it
   for you, keeping your saves, settings and game files.
 
@@ -125,7 +130,9 @@ FILES
 
 - ghvanhalen.toml           Base settings. Created with the defaults this game needs if it is missing.
 - ghvanhalen_options.toml   What GH Van Halen Launcher saves. Loaded after ghvanhalen.toml.
-- logs\                     Log files. Attach the latest one when you report a problem.
+- logs\                     Log files: the game's (ghvanhalen_NNN.log) and the launcher's (launcher_NNN.log,
+                            with a .dmp file when it stopped responding). Attach the latest ones when you report
+                            a problem.
 - userdata\                 The shader cache. Keep this folder if you move the game to another folder. If the
                             game folder cannot be written (for example under Program Files), it goes to
                             Documents\ghvanhalen instead.
@@ -138,7 +145,8 @@ Command line options (--name=value, for example in Steam launch options) win ove
 REPORTING A PROBLEM
 
 Tell us on Discord (https://discord.gg/XQtM5TmNs8) or open an issue on the project's page, with where in the
-game it happened, a screenshot if you can, and the latest file in the logs folder.
+game it happened, a screenshot if you can, and the latest files in the logs folder (the game's and, if the
+launcher misbehaved, the launcher's).
 
 
 KNOWN ISSUES

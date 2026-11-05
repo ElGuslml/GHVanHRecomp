@@ -26,7 +26,10 @@
 //   group's jobs, sub_8243B250) took the queue's critical section again and again while the workers ran them, the
 //   lock they need to finish: between its passes it now watches the count without the lock.
 // - The render thread sleeps in one go until shortly before the vertical blank it waits for, which comes at the video
-//   mode's refresh rate (1/60 s by default).
+//   mode's refresh rate (1/60 s by default). Then it blocks on an event the game's two callbacks set when they
+//   advance the counters (hooks right after each advance): it wakes some tens of microseconds after the counter, not
+//   up to half a millisecond after (a slice of a high resolution timer), and a variable refresh rate display shows
+//   each frame as regularly as the vertical blanks come (GH Metallica's, 2026-11-04).
 //
 // The D3D library's waits for the GPU (six loops: sub_821D95E8, sub_821D9680, sub_821DA1A0 the fences, sub_821E2D48
 // in the present, sub_821E34F8, sub_821E3728; each fills a record with sub_821D7268 and calls sub_821D7378 for every
@@ -44,6 +47,7 @@
 #include <immintrin.h>
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <cstring>
 
@@ -192,6 +196,17 @@ struct Vblank {
 };
 thread_local Vblank t_vblank[2];
 
+// Set by the game's callbacks right after they advance the counters: 0 the swap counter (0x82AB2420, sub_822E2968),
+// 1 the vertical blank counter (0x82AB2410, sub_822E2920). Auto-reset: a waiter that finds one set from an earlier
+// advance checks its counter again and blocks again.
+HANDLE g_counter_event[2] = {CreateEventW(nullptr, FALSE, FALSE, nullptr), CreateEventW(nullptr, FALSE, FALSE, nullptr)};
+std::atomic<bool> g_counter_signaled[2];
+
+void SignalCounter(int index) {
+  g_counter_signaled[index].store(true, std::memory_order_relaxed);
+  SetEvent(g_counter_event[index]);
+}
+
 // How long before the expected advance the long sleep ends, for the vblank thread's millisecond and the sleep's
 // own lateness; checked in slices from there.
 constexpr auto kVblankMargin = 2ms;
@@ -211,7 +226,7 @@ std::chrono::nanoseconds VblankPeriod() {
   return period;
 }
 
-void VblankWait(Vblank& state, uint64_t counter, uint64_t target) {
+void VblankWait(Vblank& state, int index, uint64_t counter, uint64_t target) {
   const Clock::time_point now = Clock::now();
   if (counter != state.value) {
     // An advance seen within a slice of the previous check is a good anchor; one found after other work is not
@@ -224,6 +239,13 @@ void VblankWait(Vblank& state, uint64_t counter, uint64_t target) {
   }
   state.checked = now;
   if (counter >= target) {
+    return;
+  }
+  // Once the callback's hook has signaled the counter: until its next advance (a few milliseconds at most; the timeout
+  // only in case an advance came some other way).
+  if (Smart() && g_counter_event[index] && g_counter_signaled[index].load(std::memory_order_relaxed)) {
+    WaitForSingleObject(g_counter_event[index], 4);
+    state.checked = state.wait.last = Clock::now();
     return;
   }
   // Predicted only from a recent anchor a few vblanks before the target: one found long ago, or with the counter far
@@ -292,11 +314,19 @@ void GHVanHalenRenderWaitHook(PPCRegister& r11, PPCRegister& r10) {
 
 // [[midasm_hook]] 0x82431D6C (sub_82431C58, the render thread presenting a frame): before "cmpld cr6,r3,r11",
 // r3 = the vertical blank counter 0x82AB2420 just read and r11 the value it waits for (go on once r3 reaches it).
-void GHVanHalenVblankWaitHook(PPCRegister& r3, PPCRegister& r11) { VblankWait(t_vblank[0], r3.u64, r11.u64); }
+void GHVanHalenVblankWaitHook(PPCRegister& r3, PPCRegister& r11) { VblankWait(t_vblank[0], 0, r3.u64, r11.u64); }
 
 // [[midasm_hook]] 0x82431EB4 (sub_82431C58): before "cmpld cr6,r3,r30", r3 = the counter 0x82AB2410 and r30 the
 // frame's last vertical blank.
-void GHVanHalenVblankWait2Hook(PPCRegister& r3, PPCRegister& r30) { VblankWait(t_vblank[1], r3.u64, r30.u64); }
+void GHVanHalenVblankWait2Hook(PPCRegister& r3, PPCRegister& r30) { VblankWait(t_vblank[1], 1, r3.u64, r30.u64); }
+
+// [[midasm_hook]] 0x822E29A4 (sub_822E2968, the swap callback): after "std r10,328(r11)", the swap counter's
+// (0x82AB2420) advance.
+void GHVanHalenSwapSignalHook() { SignalCounter(0); }
+
+// [[midasm_hook]] 0x822E2954 (sub_822E2920, the vertical blank callback): after "std r5,312(r7)", the vertical blank
+// counter's (0x82AB2410) advance.
+void GHVanHalenVblankSignalHook() { SignalCounter(1); }
 
 // [[midasm_hook]] at the entry of sub_821D7378: a check of a D3D wait for the GPU whose condition is still false.
 void GHVanHalenGpuWaitHook() { SpinOrSleep(t_gpu_wait); }

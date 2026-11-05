@@ -115,8 +115,16 @@ namespace {
 
 double FrameSeconds() { return 1.0 / VblankRate(); }
 
-// The script that drains star power (below), and the name of the script a wait belongs to (+48 of the wait).
+// The scripts whose game-frame waits are not held (below), and the name of the script a wait belongs to (+48 of the
+// wait).
 constexpr uint32_t kStarPowerDrainScript = 0x74B936AB;
+// "begin BandManager_PrepareBandForRender Wait 1 gameframe repeat" (the same script as GH Metallica's): the script
+// function (sub_8212EAE0 -> sub_8212DE78) has each musician place his instrument's strings (sub_82132588: each string's
+// start, end, the point the fretting finger presses and the point that vibrates, in the world, from the instrument's
+// bones this frame). Held to 60 passes a second, the strings were placed every second or third frame at 120 or 160 FPS
+// and stayed where the guitar had been in between: they shook around a guitar that moved (Gustavo in GH Metallica,
+// 2026-11-04: his character's, while playing; a temporary probe there recorded them every 16.7 ms at 120 FPS).
+constexpr uint32_t kBandRenderScript = 0x827BA6B0;
 
 uint32_t WaitingScript(uint32_t wait) {
   auto* kernel = rex::system::kernel_state();
@@ -140,9 +148,10 @@ void GHVanHalenFrameWaitSetHook(PPCRegister& r3, PPCRegister& r4) {
   // 0x74B936AB) waits one game frame per pass and takes current_deltatime (the frame's time) off the meter each pass,
   // or GetFrameLength's in a band: held to 60 passes a second it drained 60 frames' time a second, and at 160 FPS star
   // power lasted 160 / 60 times as long (Gustavo, in GH Metallica and here). It is the only script of the game's 7937
-  // that waits in game frames and takes off either. The waiting script's name is at +48 of its wait (+216 of the
-  // script, as in GH Metallica).
-  if (WaitingScript(r3.u32) == kStarPowerDrainScript) {
+  // that waits in game frames and takes off either. The band's strings are placed every frame too (kBandRenderScript).
+  // The waiting script's name is at +48 of its wait (+216 of the script, as in GH Metallica).
+  const uint32_t script = WaitingScript(r3.u32);
+  if (script == kStarPowerDrainScript || script == kBandRenderScript) {
     std::lock_guard lock(g_frame_waits_mutex);
     g_frame_waits.erase(r3.u32);
     return;
@@ -420,5 +429,52 @@ void GHVanHalenLoadingSpinnerHook(PPCRegister& r10) {
 void GHVanHalenLoadingWaveHook(PPCRegister& step) {
   if (HighRate()) {
     step.f64 = double(float(step.f64 * FrameStepScale()));
+  }
+}
+
+// The physics (Havok): sub_823CA210, once a frame, steps the world (sub_8264C890, then sub_8264C898) by the game's
+// time scale (sub_822E2B40, 1 while the game runs) times a fixed 1/60 s (0x82022DB4), not by the frame's time, as GH
+// Aerosmith's engine does (its src/framerate.cpp; there the bodies that follow the animated bones, by velocity =
+// (target - position) / the frame's time, overshot 2.67 times at 160 and the hair and cables stretched in spikes). The
+// world ran 2.67 times as fast at 160 (GH Metallica's, found while looking for its guitars' strings, which were not
+// this: kBandRenderScript above). Above 60 Hz the world is stepped by the frame's own time when it is shorter than
+// 1/60 s: the measured frame time sub_822E2DE8 keeps at +52 of the timer block 0x82AB22D8 (clamped as the game clamps
+// it), so the physics keeps real time.
+// [[midasm_hook]] 0x823CA25C (sub_823CA210: after "lfs f31,11700(r11)", the step's 1/60 s, before "fmuls f1,f1,f31" and
+// the world's two calls): f31 = the step.
+void GHVanHalenPhysicsStepHook(PPCRegister& f31) {
+  constexpr uint32_t kFrameTime = 0x82AB22D8 + 52;  // float, seconds
+  uint8_t* base = GuestBase();
+  if (!base || !HighRate()) {
+    return;
+  }
+  const uint32_t bits = LoadWord(base, kFrameTime);
+  float frame;
+  std::memcpy(&frame, &bits, 4);
+  if (frame > 0.0f && frame < f31.f64) {
+    f31.f64 = frame;
+  }
+}
+
+// The strings' vibration. Each musician's strings (the band manager's entries, 328 bytes from [0x82965630] + 24): a
+// note's strum plucks them (sub_8212F768: amplitude 0.002 at +264 + 4 i, timer at +288 + 4 i set to 0); each frame
+// sub_8212D410 multiplies each amplitude by 0.99 (the script global 0xB70CCCA3) and adds the frame's time to its timer;
+// sub_82132588 places each string displaced by amplitude * sin(2 pi * 62 Hz (0xFD146572) * timer). At 60 FPS a 62 Hz
+// vibration sampled 60 times a second shows as a slow wobble of 62 - 60 = 2 Hz, what the console shows; placed every
+// frame above 60 (kBandRenderScript), the real 62 Hz would show, and the 0.99 a frame fades it faster. Above 60 Hz the
+// frequency is the one 60 FPS shows (the same at the 60 FPS frames' times, smooth between them) and the fade 0.99 per
+// 60th of a second. (GH Metallica's shaking strings were the placing held to 60 passes a second, not this.)
+// [[midasm_hook]] 0x82132608 (sub_82132588: after the call returning the frequency, before "fmr f29,f1"): f1 = Hz.
+void GHVanHalenStringFrequencyHook(PPCRegister& f1) {
+  if (HighRate()) {
+    f1.f64 -= 60.0 * std::round(f1.f64 / 60.0);
+  }
+}
+
+// [[midasm_hook]] 0x8212D44C (sub_8212D410: after the call returning the fade, before the strings' loop): f1 = the
+// amplitude's factor each frame.
+void GHVanHalenStringFadeHook(PPCRegister& f1) {
+  if (HighRate() && f1.f64 > 0.0) {
+    f1.f64 = double(float(std::pow(f1.f64, 60.0 / VblankRate())));
   }
 }

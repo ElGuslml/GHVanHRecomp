@@ -4,7 +4,8 @@
 controller that starts the game, the screen effects' switches, the PC microphone, the menu bars beside the image; on
 2026-10-29 a controller played as a guitar; on 2026-10-30 each controller's own layout and the whammy bar's
 calibration, V-Sync in step with the display, the music kept with the notes after stutters, low latency audio; on
-2026-11-04 the audio on slower PCs).** Guitar Hero: Van Halen is Guitar Hero: Metallica's engine (the executable
+2026-11-04 the audio on slower PCs; on 2026-11-05 V-Sync with G-Sync, Alt+Tab, the guitars' strings above 60 FPS, the
+physics' step, each slot's kind of controller, Shift / Ctrl / Alt and the F keys on the keyboard's controls).** Guitar Hero: Van Halen is Guitar Hero: Metallica's engine (the executable
 `gh4_3_Final.exe`, Metallica's `gh4_1_burn_Final.exe`; both XDK 2.0.7978): its first boot had GH Metallica's problems
 (five cores busy in the menus, among others). GHMetalRecomp's fixes were copied with their names changed and every
 address translated: a function matcher over both executables' instruction indexes found each hooked function, and every
@@ -80,6 +81,20 @@ game never runs ahead of the display. Measured in GH Metallica at 160 FPS on a 1
 display, no frame dropped (NVIDIA's MAILBOX queued three frames: 16-19 ms); at 60 FPS on a 60 Hz display a steady
 16.5 ms, presents 99.8 % regular. Calibrate the video again after changing it.
 
+**With G-Sync or FreeSync** (GH Metallica's of 2026-11-04, its `docs/vsync.md`; Gustavo's frame time graph showed a
+saw tooth for a few seconds, then even, over and over, at 120 Hz on a 4K TV and at 160 on a monitor): the SDK keeps its
+own timer for a variable refresh rate display (its vertical blanks follow the game's frames), and that timer ticked 6
+to 10 ms apart at 120 Hz (a millisecond's sleep at a time) at the panel's maximum, so frames now and then waited in the
+swap chain's queue. SDK change 70: a high resolution timer and `vblank_timer_spin_us = 700` (ticks 8.33-8.38 ms apart),
+and on such a display the timer 0.25 % under its exact refresh rate (119.70 at 120); the render thread wakes on events
+the game's vertical blank and swap callbacks set (`src/thread_waits.cpp`, hooks at 0x822E2954 in `sub_822E2920` and
+0x822E29A4 in `sub_822E2968`), within microseconds of the tick. With V-Sync off, the game runs 0.25 % under the
+display's exact rate when the frame rate chosen is that rate (`src/options.cpp`; at the round 160 a G-Sync monitor at
+159.962 Hz tore). Gustavo, in GH Metallica: the saw tooth gone. **Off:** `vblank_timer_spin_us = 0` (the spin).
+
+**Alt+Tab from fullscreen** closed GH Metallica (NativeXRenderer D125): minimized, the renderer kept drawing frames but
+ended none, and its memory for uploads ran out within two seconds in a song. Those frames are ended now.
+
 ## Noise instead of music, and the songs' tracks
 
 The game's audio library (FMOD) mixes when its read position moves to the next block of a short ring, and the songs are
@@ -104,6 +119,16 @@ guitar and the kick drum are heard).
   `gamepad_whammy_rest = true` makes the bar at rest while the stick is centred, and fully pressed with the stick
   pushed to either side; the keyboard's Right arrow the same. **Off:** the switch, or `gamepad_tap_target = ""`;
   `gamepad_whammy_rest = false`.
+- Each slot's kind of controller follows the one played (GH Metallica's of 2026-11-03, its `docs/controller-kind.md`, a
+  player's report: the keyboard playing guitar while the first controller was set to sing made the keyboard's player
+  the singer). The game asks a port for its kind only when its controller connects, and the keyboard shares slot 0
+  with the first controller: when the SDK (change 66) finds the slot played on another kind, a hook at the entry of
+  the port's update (`sub_823B0680`) has the game ask again, outside a song (`src/players.cpp`). **Off:**
+  `ghvanhalen_kind_follows_controller = false`.
+- Shift, Ctrl and Alt can be keys of their own on the keyboard's controls, each side separate (Left Alt as Star Power;
+  SDK change 67), and F1-F12 too: the SDK's developer keys are off (`debug_hotkeys = false`, SDK change 68; the
+  launcher's Settings > Game > Debug keys turns them on), and a key on a control plays only that control (GH
+  Metallica's of 2026-11-03, two players' requests; its `docs/keyboard-keys.md`).
 - Third-party guitars (GH Metallica's of 2026-10-29, reported with CRKD guitars; SDK changes 59 and 60, RecompLauncher
   3.4): each controller keeps its own assignments, by its serial number or GUID (`gamepad_device_remap`; a guitar and
   an Xbox 360 controller shared one layout); while the launcher waits for a button a trigger counts only once pressed
@@ -136,7 +161,13 @@ button presses the scripts poll every few frames (`sub_823AE218`, the script fun
 the whammy on a sustain (`sub_82153B88`, `sub_82156AF8`, `sub_82156CD8`: 5 frames become 5/60 s) and the loading
 screens' spinning icons (`sub_824D5508`, `sub_8240DAA0`, `sub_824D5880`). Star power's drain (script `0x74B936AB`)
 is not held to 60 passes a second, as it takes the frame's time off the meter each frame: held, star power lasted
-160 / 60 times as long at 160 FPS (Gustavo, 2026-10-27). **Off:** 60 in the launcher.
+160 / 60 times as long at 160 FPS (Gustavo, 2026-10-27). Nor is the band's strings' placing (script `0x827BA6B0`,
+`BandManager_PrepareBandForRender` then `Wait 1 gameframe`; GH Metallica's of 2026-11-04): held, the strings were
+placed every second or third frame at 120 or 160 FPS and stayed where the guitar had been in between, shaking around
+a moving guitar. Placed every frame, their vibration (62 Hz, which 60 FPS shows as a 2 Hz wobble) is kept to that
+wobble and its fade to 0.99 per 60th of a second (hooks at 0x82132608 in `sub_82132588` and 0x8212D44C in
+`sub_8212D410`). Havok's world, stepped by a fixed 1/60 s each frame (`sub_823CA210`), is stepped by the frame's own
+time above 60 (hook at 0x823CA25C). **Off:** 60 in the launcher.
 
 ## The crowd's claps on star power
 
