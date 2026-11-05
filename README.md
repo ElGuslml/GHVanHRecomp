@@ -18,17 +18,17 @@ Windows: no emulator to set up, sharp graphics, wide screens, high frame rates, 
 > [!IMPORTANT]
 > 💿 **You need your own original copy of the game.** This project does not include any of the game's files, and
 > never will.
-> - To play, you need an Xbox 360 copy of *Guitar Hero: Van Halen* that you own.
+> - To play, you need an Xbox 360 copy of *Guitar Hero: Van Halen* that you own (tested with the USA disc).
 > - You make an image (ISO) of your own disc, and the launcher installs the game from it.
 > - Please do not ask for the game's files, and do not share them or links to them.
 >
 > This project is not affiliated with or endorsed by Microsoft, Activision, the game's developers or Van Halen.
 
 > [!NOTE]
-> 🤘 **Beta.** Guitar Hero: Van Halen runs on Guitar Hero: Metallica's engine, and everything
-> [GHMetalRecomp](https://github.com/ElGuslml/GHMetalRecomp) fixes and adds is here too. Songs play on guitar; drums
-> and singing have not been tested in this game yet. If something goes wrong, please
-> [tell us](#-reporting-a-problem)!
+> 🤘 **Beta.** Songs have been played from start to finish with an Xbox 360 guitar, on guitar and bass parts. Drums
+> and singing have not been tested in this game yet. Guitar Hero: Van Halen runs on Guitar Hero: Metallica's engine,
+> and everything [GHMetalRecomp](https://github.com/ElGuslml/GHMetalRecomp) fixes and adds is here too. If something
+> goes wrong, please [tell us](#-reporting-a-problem)!
 
 > [!WARNING]
 > ⚠️ **Not tested yet:** AMD graphics cards, and Wii or PS3 instruments (guitars and drum kits). If you play with any
@@ -68,7 +68,8 @@ From then on, the launcher keeps itself up to date: when a new version comes out
 
 - 🎸 **Your guitar:** an Xbox 360 guitar plays as on the console, whammy bar and Star Power included. Any other
   controller is a guitar too, and the keyboard can be one (experimental: turn it on in the launcher's Keyboard page;
-  frets on D F J K L).
+  frets on D F J K L). Each controller's buttons can be reassigned in the launcher, and a whammy bar that reads
+  pressed at rest (some third-party guitars) can be calibrated there.
 - 🎮 **Auto-strum, GH2 / GH3 style:** on a controller or the keyboard, each fret strums as you press it, so you play
   with the frets alone (a chord is one strum). Turn it on in the launcher's Controls tab; it only acts during a song,
   so the menus work as usual. The whammy bar is the right stick, pushed to either side.
@@ -76,16 +77,49 @@ From then on, the launcher keeps itself up to date: when a new version comes out
   choose which controller sings.
 - 🖥️ **Sharp, native graphics:** the game is drawn by your graphics card at your screen's resolution, with smooth
   edges (antialiasing) and sharper textures.
+- 🔍 **Upscaling:** AMD FSR 1 or NVIDIA NIS, on any graphics card, with their quality and sharpness
+  ([see below](#-upscaling-amd-fsr-1-and-nvidia-nis)).
 - ⚡ **High frame rates:** 60 FPS as on the console, or 120, 144, 160, 165 or 240 FPS if your monitor supports it
-  (experimental). The songs keep their speed and stay in sync.
+  (experimental). The songs keep their speed and stay in sync. V-Sync is on by default (no tearing, the game in step
+  with your monitor, without V-Sync's usual delay); leave it on with a G-Sync or FreeSync monitor too.
+- 🔊 **Low latency audio:** optional, in the launcher's Settings: the game takes your audio device in exclusive mode,
+  and the sound comes up to about 55 ms sooner (measured in GHMetalRecomp on a USB audio interface).
 - 📺 **Wide and ultrawide screens:** the stage fills 16:9, 21:9 and wider screens, while the note highway, the HUD and
   the menus keep their shape in the center.
 - 👤 **Profiles:** your saves, achievements and playtime in a profile shared by all the ElGus Recomps launchers.
 - 👥 **Play together:** the controller that presses a button at the title screen plays with your profile; the other
   controllers join as its guests, as on the Xbox 360.
 - 🏆 **Achievements:** a notification when you unlock one, and all 46 in the launcher or with F7 in the game.
-- 🌍 **Languages:** English, French, German, Italian and Spanish.
+- 🌍 **Languages:** English, French, German, Italian and Spanish, in the game and in the launcher.
 - 🔄 **Automatic updates** from this page.
+
+## 🔍 Upscaling: AMD FSR 1 and NVIDIA NIS
+
+For a 4K screen or a slower graphics card, the game can be drawn with fewer lines than your screen has and enlarged
+to fill it. A plain stretch makes the menus' text, the HUD and every edge soft; **AMD FSR 1** and **NVIDIA Image
+Scaling (NIS)** enlarge the image keeping them sharp. Both work on any graphics card (AMD, NVIDIA or Intel).
+
+<p align="center">
+  <img src="docs/images/upscaling-comparison.png" width="100%" alt="The main menu at 3440x1440: native, a plain stretch from 720 lines, AMD FSR 1 and NVIDIA NIS">
+</p>
+<p align="center"><sub>The main menu on a 3440x1440 screen, at its own pixels: drawn at the screen's 1440 lines, then
+from the console's 720 lines with a plain stretch, with AMD FSR 1 and with NVIDIA NIS.</sub></p>
+
+In the launcher's **Settings → Video**:
+- **Upscaling:** Off, AMD FSR 1 or NVIDIA NIS.
+- **Quality:** how many fewer lines the game is drawn with: Ultra Quality (77 % of your screen's), Quality (67 %),
+  Balanced (59 %), Performance (50 %) or Ultra Performance (33 %), never fewer than the console's 720.
+- **Sharpness:** Off, Low, Medium (AMD's and NVIDIA's recommendation) or High. It works without upscaling too (AMD
+  CAS).
+
+<p align="center">
+  <img src="docs/images/launcher-video.png" width="70%" alt="Settings, Video: Upscaling, Quality and Sharpness">
+</p>
+
+They are light: GHMetalRecomp, on the same renderer, measured 0.14 ms (FSR 1) or 0.20 ms (NIS) of the graphics card's
+time per frame, on an RTX 4070 Ti at 3440x1440 from 720 lines
+([details](https://github.com/ElGuslml/GHMetalRecomp/blob/main/docs/scaling.md)). Upscaling is for the NativeXRenderer
+renderer (the default).
 
 ## 🔧 Better than the original
 
@@ -119,8 +153,8 @@ Everything is set up from **GH Van Halen Launcher**, with the mouse, the keyboar
 |---|---|
 | ▶️ **Play** | Start the game, and see your settings, achievements and updates at a glance. |
 | 🏆 **Achievements** | All 46 achievements, the ones you have unlocked and when. |
-| 🎮 **Controls** | Your guitars, controllers and keyboard: what each button or key does, and which controller sings. The keyboard as a guitar (experimental). Frets that strum as you press them, on a controller or the keyboard. Your microphone (experimental): device, gain and level. |
-| ⚙️ **Settings** | **Game:** the language. **Video:** monitor, fullscreen or window, resolution, image format (fill a wide screen or keep 16:9), upscaling (AMD FSR 1, NVIDIA NIS) and sharpness, V-Sync (on by default: no tearing, without V-Sync's usual delay; leave it on with a G-Sync or FreeSync monitor too). **Graphics:** renderer, frame rate, antialiasing, texture sharpness, the game's screen effects. |
+| 🎮 **Controls** | Your guitars, controllers and keyboard: what each button or key does, and which controller sings. The keyboard as a guitar (experimental). Frets that strum as you press them, on a controller or the keyboard. A whammy bar's calibration. Your microphone (experimental): device, gain and level. |
+| ⚙️ **Settings** | **Game:** the game's and the launcher's language, Low latency audio. **Video:** monitor, fullscreen or window, resolution, image format (fill a wide screen or keep 16:9), upscaling (AMD FSR 1, NVIDIA NIS) and sharpness, V-Sync (on by default: no tearing, without V-Sync's usual delay; leave it on with a G-Sync or FreeSync monitor too). **Graphics:** renderer, frame rate, antialiasing, texture sharpness, the game's screen effects. |
 | 🔄 **Updates** | Your version, and new ones when they come out. |
 | 👤 **Profile** | Your picture at the top right: hours played, streaks, your week, your games and your favorite achievements. |
 
@@ -133,7 +167,7 @@ Everything is set up from **GH Van Halen Launcher**, with the mouse, the keyboar
   <img src="docs/images/launcher-video.png" width="49%" alt="Settings: Video">
   <img src="docs/images/launcher-achievements.png" width="49%" alt="Achievements">
 </p>
-<p align="center"><sub>Settings (Video: your screen, window or fullscreen, the image format) and the achievements.</sub></p>
+<p align="center"><sub>Settings (Video: your screen, window or fullscreen, the image format, upscaling) and the achievements.</sub></p>
 
 Your choices are saved as soon as you make them. When you quit the game, the launcher comes back.
 
@@ -159,7 +193,7 @@ graphics instead), and tell us whether it happens there too.
 
 ### Known issues
 
-- 🥁 Drums and singing have not been tested in this game yet.
+- 🥁 Drums and singing have not been tested in this game yet: guitar and bass parts are known to work.
 - 🎤 Singing is experimental: if the pitch line jumps around, lower the microphone's **Gain** in the launcher; if the
   game does not hear you, raise it. While a microphone is chosen, Windows shows that the game is using it.
 - ⌨️ Playing with the keyboard is experimental.
@@ -186,6 +220,18 @@ natively on Vulkan.
 - [Building and developing](docs/development.md): requirements, building from source, configuration, how the SDK is
   modified.
 - [`docs/`](docs/README.md): a short note on each problem found and how it was solved.
+
+## 🚧 In the works
+
+New features on the way:
+- 🌐 **Online multiplayer:** play with your friends over the internet.
+- 🥁 **MIDI drum kits:** play the drums on an electronic drum kit connected to your PC.
+- 💿 **Guitar Hero: World Tour DLC:** import your World Tour songs and play them here.
+- 🎵 **Custom songs:** play songs made by the community.
+- 🐧 **Linux and Steam Deck:** a port to play there too.
+- ✨ **And more...**
+
+Follow along on [Discord](https://discord.gg/XQtM5TmNs8) and on [X](https://x.com/ElGuslml).
 
 ## 🤖 A note about AI
 

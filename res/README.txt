@@ -17,7 +17,7 @@ REQUIREMENTS
 - Microsoft Visual C++ Redistributable 2015-2022 (x64). Most PCs already have it. If Windows says that
   MSVCP140.dll or VCRUNTIME140.dll is missing, install it from:
   https://aka.ms/vs/17/release/vc_redist.x64.exe
-- Your Guitar Hero: Van Halen disc as an ISO file (about 4.5 GB once installed).
+- Your Guitar Hero: Van Halen disc as an ISO file (tested with the USA disc; about 4.5 GB once installed).
 - An Xbox 360 guitar. Any other controller works as a guitar too, and so does the keyboard.
 - To sing (experimental): any microphone connected to the PC, and a controller for the singer.
 
@@ -67,7 +67,9 @@ when you press PLAY.
     Xbox controller, strum is the D-pad, the whammy bar the right stick (a controller's, pushed to either
     side) and Star Power Back. A controller's Instrument: Guitar, or Vocals for the singer (see SINGING).
     "Strum when a fret is pressed" makes the frets of every controller playing guitar strum as you press
-    them, in songs.
+    them, in songs. Each controller keeps its own assignments. Whammy bar: how far the game reads the bar.
+    If it reads pressed with the bar at rest, or does nothing (some third-party guitars), press Calibrate,
+    push the bar all the way and hold it, then let it go; X clears the calibration.
   - Keyboard (experimental): turn on "Play with keyboard and mouse" to play with the keyboard as a guitar
     (frets D F J K L, strum with the Up and Down arrows, Star Power with Space, Start with Enter), and change
     any key. "Strum when a fret is pressed" makes each fret strum as you press it, in songs. Shift, Ctrl
@@ -87,8 +89,11 @@ when you press PLAY.
     (original), and 120, 144, 160, 165 or 240 FPS where your monitor reaches them (experimental). The songs
     keep their speed and stay in sync at every frame rate. The game's screen effects can be turned off one by
     one.
-  - Game: the language (English, French, German, Italian or Spanish; the game has no language menu of its
-    own). Debug keys (off by default): F3, F4 and ` open the developer's windows in the game (frame times,
+  - Game: the launcher's language and the game's (English, French, German, Italian or Spanish; the game
+    has no language menu of its own), and Low latency audio (off by default): the game takes your audio
+    device in exclusive mode and the sound comes sooner (about 55 ms on a USB audio interface); other
+    programs cannot play on that device while the game runs. Calibrate the audio again after changing it.
+    Debug keys (off by default): F3, F4 and ` open the developer's windows in the game (frame times,
     settings, console).
 - Updates: the launcher checks for a new version when it starts (you can turn that off) and installs it
   for you, keeping your saves, settings and game files.
@@ -151,8 +156,9 @@ launcher misbehaved, the launcher's).
 
 KNOWN ISSUES
 
-- Guitar Hero: Van Halen runs on Guitar Hero: Metallica's engine, with GHMetalRecomp's fixes. Songs play on
-  guitar; drums and singing have not been tested in this game yet.
+- Guitar Hero: Van Halen runs on Guitar Hero: Metallica's engine, with GHMetalRecomp's fixes. Songs have been
+  played from start to finish on guitar and bass parts; drums and singing have not been tested in this game
+  yet.
 - Singing is experimental: if the pitch line jumps or the game misses your voice, change the microphone's
   Gain in the launcher.
 - Some USB audio interfaces add delay in Windows' shared audio mode (a Focusrite Scarlett about 20 ms more
