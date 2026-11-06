@@ -167,7 +167,9 @@ placed every second or third frame at 120 or 160 FPS and stayed where the guitar
 a moving guitar. Placed every frame, their vibration (62 Hz, which 60 FPS shows as a 2 Hz wobble) is kept to that
 wobble and its fade to 0.99 per 60th of a second (hooks at 0x82132608 in `sub_82132588` and 0x8212D44C in
 `sub_8212D410`). Havok's world, stepped by a fixed 1/60 s each frame (`sub_823CA210`), is stepped by the frame's own
-time above 60 (hook at 0x823CA25C). **Off:** 60 in the launcher.
+time above 60 (hook at 0x823CA25C). Nor is `button_checker` (script `0x716BADDC`, through `sub_82158260`; GH5's of
+2026-11-05): each pass lowers the fret heads, risen after a hit, by the frame's time; held, they fell back in 0.27 s
+instead of 0.1 s at 160 FPS (measured in GH5; passes a second at 160 FPS: 160 here, 60 held). **Off:** 60 in the launcher.
 
 ## The crowd's claps on star power
 
