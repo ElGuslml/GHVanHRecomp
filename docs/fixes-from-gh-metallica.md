@@ -210,6 +210,13 @@ guitars (`gamepad_device_subtypes`, change 56). GH Van Halen Launcher's Controls
 the keyboard (device, channel, gain, level) and each controller's Instrument row (Guitar or Vocals). **Off:**
 `usb_microphone_1 = ""` (the default: the launcher's Microphone: None).
 
+## PS3 guitars and a guitar's tilt
+
+SDK changes 71 and 72, RecompLauncher 3.12 and 3.13. `guitar_ps3_protocol = true`: a PS3 Guitar Hero guitar (a CRKD guitar on
+its P3 setting too) has its yellow and blue put right and its whammy bar at rest. The launcher keeps every controller open
+and assigns any axis to the whammy bar and to the tilt. Not tried with those guitars here. **Off:**
+`guitar_ps3_protocol = false`.
+
 ## Quitting from the main menu
 
 B on the title screen or the main menu asks whether to quit (A quits, B cancels): `src/quit_prompt.cpp`, a hook in the
