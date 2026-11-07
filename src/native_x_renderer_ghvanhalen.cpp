@@ -85,6 +85,11 @@ const native_x_renderer::Profile& NativeXRendererProfile() {
     // The ultrawide hooks (src/widescreen.cpp) widen the 16:9 cameras by AspectFactor() and keep the 2D layer at
     // 16:9 in the center: NativeXRenderer may fill a wider output (native_x_renderer_fill_screen).
     p.widens_cameras = true;
+    // The post-processing works on reduced copies of the scene, as GH Metallica's (D127): the 640x360 4x MSAA resolve
+    // of the 1280x720 scene, then 320x180 targets (EDRAM 720, 768, 816, depth 1744) for the glow pass, the bright pass
+    // and the bloom's and the depth of field's 16-tap blurs, whose offsets are constants for 320x180 texels. At the
+    // render scale those offsets skipped host texels: the bloom showed a lattice. They stay at 1x, as on the console.
+    p.unscaled_screen_fractions = true;
     native_x_renderer::DeviceLayout& d = p.device;
     // Six dirty masks from +0: VS constants, PS constants, register groups and the program, fetch slots (low half,
     // slot 0 in bit 31) and the 0x2280 group, the 0x2300/0x2380 groups with the clip planes and bool/loop constants,

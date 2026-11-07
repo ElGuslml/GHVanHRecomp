@@ -43,3 +43,17 @@ are 16-bit 1_5_5_5, a format NativeXRenderer had no host format for: their bindi
 **Fix:** NativeXRenderer D105 loads them as the SDK's backends do (B5G5R5A1, with DiligentCore patch 0008 mapping it
 to Vulkan's A1R5G5B5). Checked: the intro with 0 placeholder bindings and the guitar as on the Xenos path. **Off:**
 none; the Xenos path (`native_x_renderer = false`) never had the problem.
+
+## The bloom's lattice (NativeXRenderer D127)
+
+**Symptom:** above 720 lines (most visible at 1440p and ultrawide), the glow around the stage's bright lights doubled
+into offset copies or a grid of dots, and the menus' blurred backgrounds with the same pattern; found in GH Metallica
+(a player's issue there, its `docs/bloom-lattice.md`). **Cause:** the post-processing is GH Metallica's: the 640x360
+4x MSAA downsample of the scene, then 320x180 targets (EDRAM 720, 768, 816, depth 1744) for the glow pass, the bright
+pass and the bloom's and the depth of field's 16-tap blurs, whose tap offsets are constants computed for 320x180
+texels. Drawn at the render scale (860x360 at 3440x1440), the taps skipped texels. **Fix:** the profile sets
+`unscaled_screen_fractions` (`src/native_x_renderer_ghvanhalen.cpp`): NativeXRenderer keeps the reduced copies of the
+screen (640x360, 320x180) and their resolves at 1x, as on the console, the 640x360 copy averaging every pixel of the
+scene under it; the rest stays at the screen's resolution. Checked (2026-11-07): a run at 3440x1440 to the intro
+(`ghvanhalen_072`), the 320x180 targets and their resolves at 320x180 on the host, no warning. **Off:**
+`native_x_renderer_unscaled_screen_fractions = false` in `ghvanhalen.toml`.
