@@ -53,6 +53,12 @@ reserved_as_local = true
 [[midasm_hook]]
 address = 0x8243AF98   # li r4,0 (sub_8243AF38: a job worker with an empty queue, before WaitForSingleObject(event, 0))
 name = "GHVanHalenJobWaitHook"
+# A job queued pulses the manual-reset job event (sub_822CC390), which woke every waiting worker for one job: with
+# ghvanhalen_job_wake_one the hook wakes one waiting worker itself and the pulse is skipped.
+[[midasm_hook]]
+address = 0x822CC390   # lis r11,-32085 (sub_822CC390: lwz r3,-11276(r11), the job event at 0x82AAD3F4; b sub_82556E08, PulseEvent)
+name = "GHVanHalenJobPulseHook"
+return_on_true = true
 [[midasm_hook]]
 address = 0x822F6488   # cmplwi cr6,r3,0 (sub_822F6410: while (sub_824518D0(0x82C32868) != 0) {})
 name = "GHVanHalenFrameWaitHook"

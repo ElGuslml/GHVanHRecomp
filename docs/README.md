@@ -13,3 +13,4 @@ To build the project and work on it: [Building and developing](development.md).
 |---|---|
 | [The fixes ported from GH Metallica](fixes-from-gh-metallica.md) | Working: the threads' waits, the song clock, the audio, the guitar, the keyboard and a controller as a guitar, the second controller (the profile follows the controller that starts the game), frame rates above 60, ultrawide, the screen effects' switches, quitting from the main menu; singing with a PC microphone experimental |
 | [NativeXRenderer in Guitar Hero: Van Halen](native-x-renderer-ghvanhalen.md) | Working: GH Metallica's map and profile, translated (the default renderer since 0.1.0) |
+| [Stutters the first time something is shown](compiling-shaders.md) | Fixed: a pipeline list ships with the game; the launcher compiles it for your graphics card at the first Play ("Compiling shaders"; NativeXRenderer) |

@@ -90,6 +90,11 @@ const native_x_renderer::Profile& NativeXRendererProfile() {
     // and the bloom's and the depth of field's 16-tap blurs, whose offsets are constants for 320x180 texels. At the
     // render scale those offsets skipped host texels: the bloom showed a lattice. They stay at 1x, as on the console.
     p.unscaled_screen_fractions = true;
+    // The pipeline list (D129): every shader the game has is in DATA/FXFILES/MaterialLibrary.bin.xen, as in GH Metallica (NativeXRenderer's D129, D133).
+    static const char* const kShaderFiles[] = {"DATA/FXFILES/MaterialLibrary.bin.xen"};
+    p.title_id = 0x4156083D;
+    p.shader_files = kShaderFiles;
+    p.shader_file_count = 1;
     native_x_renderer::DeviceLayout& d = p.device;
     // Six dirty masks from +0: VS constants, PS constants, register groups and the program, fetch slots (low half,
     // slot 0 in bit 31) and the 0x2280 group, the 0x2300/0x2380 groups with the clip planes and bool/loop constants,
