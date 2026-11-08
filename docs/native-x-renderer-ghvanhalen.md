@@ -57,3 +57,12 @@ screen (640x360, 320x180) and their resolves at 1x, as on the console, the 640x3
 scene under it; the rest stays at the screen's resolution. Checked (2026-11-07): a run at 3440x1440 to the intro
 (`ghvanhalen_072`), the 320x180 targets and their resolves at 320x180 on the host, no warning. **Off:**
 `native_x_renderer_unscaled_screen_fractions = false` in `ghvanhalen.toml`.
+
+## The render scale in the shaders' constants (NativeXRenderer D128, 2026-11-08)
+
+With the SDK's recomp change 73, the translated shaders read the render scale from the draw's system constants instead
+of having it written into them. Before, a window size, internal resolution or FSR 1 / NIS setting not used before gave
+the driver new shaders to compile, and its pipeline cache kept a copy of each pipeline per scale; now one translation
+serves every scale. The first start after the change compiles every pipeline once. A draw computes what it computed
+(GH Metallica's and the other games' stored translations checked, NativeXRenderer's decisions.md D128).
+**Off:** `--native_x_renderer_scale_in_constants=false` writes the scale into the shaders as before.
