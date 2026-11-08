@@ -31,9 +31,29 @@ Windows: no emulator to set up, sharp graphics, wide screens, high frame rates, 
 > goes wrong, please [tell us](#-reporting-a-problem)!
 
 > [!WARNING]
-> ⚠️ **Not tested yet:** AMD graphics cards, and Wii or PS3 instruments (guitars and drum kits). If you play with any
-> of them and something goes wrong, please report it in [issues](https://github.com/ElGuslml/GHVanHRecomp/issues) or
-> on [Discord](https://discord.gg/XQtM5TmNs8).
+> ⚠️ **Not tested yet:** AMD graphics cards (only in a simulation so far) and drum kits. If you play with either and
+> something goes wrong, please report it in [issues](https://github.com/ElGuslml/GHVanHRecomp/issues) or on
+> [Discord](https://discord.gg/XQtM5TmNs8).
+
+## 🆕 What's new in 0.2.0
+
+Everything [GHMetalRecomp](https://github.com/ElGuslml/GHMetalRecomp) brought in its 0.4.0, on the same engine:
+
+- 🚀 **No more stutters the first time something shows up:** the first time you press PLAY (and after an update of
+  the game or of your graphics driver), the launcher shows **"Compiling shaders"** for a moment and prepares the
+  game's graphics for your graphics card. The first song, venue or effect then plays smoothly.
+- 🎸 **More guitars:** PS3 guitars play with the right frets (yellow and blue were swapped) and a whammy bar at rest,
+  CRKD guitars work, and in the launcher you can **assign your whammy bar and your tilt** to any axis of your guitar
+  (for third-party and Wii guitars). Every controller now works in the launcher, not just the first one.
+- 🔥 **Lighter on your processor:** songs use less CPU, with the game's threads no longer waking each other up tens
+  of thousands of times a second.
+- ✨ **A clean glow at high resolutions:** the bloom around lights and bright surfaces showed a grid pattern above
+  1080p; it is smooth now.
+- ⚡ **The frets above 60 FPS** spring back after each hit as quickly as at 60.
+- 🔴 **Ready for AMD graphics cards:** a problem that would have hit them at 2560 wide and above is fixed (found by
+  simulating an AMD card; not tested on a real one yet).
+
+The full list is in the [release notes](https://github.com/ElGuslml/GHVanHRecomp/releases/tag/v0.2.0).
 
 ## 🎮 How to play
 
@@ -77,6 +97,8 @@ From then on, the launcher keeps itself up to date: when a new version comes out
   choose which controller sings.
 - 🖥️ **Sharp, native graphics:** the game is drawn by your graphics card at your screen's resolution, with smooth
   edges (antialiasing) and sharper textures.
+- 🚀 **No first-time stutters:** "Compiling shaders" prepares every graphics combination the game uses for your
+  graphics card before you play, in a moment, only the first time and after an update.
 - 🔍 **Upscaling:** AMD FSR 1 or NVIDIA NIS, on any graphics card, with their quality and sharpness
   ([see below](#-upscaling-amd-fsr-1-and-nvidia-nis)).
 - ⚡ **High frame rates:** 60 FPS as on the console, or 120, 144, 160, 165 or 240 FPS if your monitor supports it
@@ -201,7 +223,8 @@ graphics instead), and tell us whether it happens there too.
   a motherboard's audio): calibrate the audio in the game's options.
 - ⚡ Above 60 FPS is experimental: something may still run too fast.
 - 🎶 Downloadable content is not supported yet.
-- ✨ The first time an effect appears, it may show up a moment late.
+- ✨ With the Xenos renderer, or if you skip "Compiling shaders", the first time an effect appears it may show up a
+  moment late.
 
 ## ❤️ Support
 
