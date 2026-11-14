@@ -5,7 +5,9 @@ controller that starts the game, the screen effects' switches, the PC microphone
 2026-10-29 a controller played as a guitar; on 2026-10-30 each controller's own layout and the whammy bar's
 calibration, V-Sync in step with the display, the music kept with the notes after stutters, low latency audio; on
 2026-11-04 the audio on slower PCs; on 2026-11-05 V-Sync with G-Sync, Alt+Tab, the guitars' strings above 60 FPS, the
-physics' step, each slot's kind of controller, Shift / Ctrl / Alt and the F keys on the keyboard's controls).** Guitar Hero: Van Halen is Guitar Hero: Metallica's engine (the executable
+physics' step, each slot's kind of controller, Shift / Ctrl / Alt and the F keys on the keyboard's controls; on
+2026-11-13 the game's debug menu, skipping the videos at the start, drums on five or four lanes, online play, the red
+border and the tap notes' trail at ultrawide, the mouse cursor, Settings > Audio and the graphics card).** Guitar Hero: Van Halen is Guitar Hero: Metallica's engine (the executable
 `gh4_3_Final.exe`, Metallica's `gh4_1_burn_Final.exe`; both XDK 2.0.7978): its first boot had GH Metallica's problems
 (five cores busy in the menus, among others). GHMetalRecomp's fixes were copied with their names changed and every
 address translated: a function matcher over both executables' instruction indexes found each hooked function, and every
@@ -190,6 +192,12 @@ at the sides of the image, not of the window. **Off:** 16:9 in the launcher
 (`ghvanhalen_ultrawide = false`); `ghvanhalen_ultrawide_hud = false` stretches the 2D layer; `ghvanhalen_menu_bars =
 false` shows the room behind the menus at their sides.
 
+Two more from GH Metallica (2026-11-13): in a song, a 2D overlay over the whole screen (the red border while the band
+is failing) covers the whole width instead of a red frame around the middle 16:9 (the sprite hook leaves the pieces of
+such an overlay as they are; `ghvanhalen_ultrawide_overlays`), and the trail that joins tap notes follows its highway
+(`GHVanHalenTapTrailHook`, 0x821C8A14 in `sub_821C82E8`: its control points are the gems' screen positions, which were
+never narrowed). Neither seen in this game yet.
+
 ## Turning off the screen effects
 
 **Options, all on by default** (GH Metallica's of 2026-10-28): the engine's screen effects work on the 3D image (the
@@ -239,3 +247,54 @@ to take it. The same engine here, so the same two fixes:
 - `ghvanhalen_job_wake_one` (on; `src/thread_waits.cpp`, the job event's pulse hooked): one waiting worker is woken per
   job. GH Metallica: each worker 5,300 -> 3,400 wakes a second, 1.98 -> 1.84 cores.
 Not measured here yet. Off: `critical_section_spin_us = 0`, `ghvanhalen_job_wake_one = false`.
+
+## The game's debug menu
+
+**Option, off by default** (GH Metallica's of 2026-11-11): the launcher's Settings → Game → "Game debug menu", or
+`ghvanhalen_debug_menu = true`. The main menu gets a Debug Menu item ("MENÚ DE DEPURACIÓN") under the Music Studio, and
+the pause menu one too: Neversoft's debug menu (Unlock All, Test Song, Repeat Last Song, Settings with Toggle Bot /
+Show Song Time / Change Venue / Select Slomo, Character Select, Skip Into Song, Play Credits, ...; its texts in
+English, some items need the developers' tools). GH Metallica's `docs/debug-menu.md` describes it.
+`src/debug_menu.cpp`: the script global `enable_button_cheats` reads as 1 only in the scripts that build the main menu
+and the pause menu, so the development shortcuts the same global turns on (songs unlocked or completed from the
+setlist and the gig posters) stay off. This game's main menu also asks `enable_debug_menus`, which its `guitar_startup`
+sets to 0 on the disc as well (GH Metallica's leaves it at 1): it reads as 1 in the main menu's script too. Hooks: the
+interpreter's two expression evaluations in `sub_822E1468` (0x822E1638 / 0x822E1640, 0x822E194C / 0x822E1950) and the
+`$name` resolve at the entry of `sub_822CEBB8`. Checked: the item in the main menu, the menu opened.
+
+## Skipping the videos at the start
+
+**Option, off by default** (GH Metallica's of 2026-11-11): Settings → Game → "Skip the intro videos", or
+`ghvanhalen_skip_intro = true`. After its legal notice (6 s more once loaded) this game plays five videos: Activision's,
+RedOctane's, Neversoft's and Underground Development's logos (`ud_logo_720p`, not in GH Metallica), then its intro.
+`src/intro.cpp` makes the script function PlayMovie (hook 0x823E2DF0 in `sub_823E2D70`) find none of the five the
+first time each is asked for, so each boot state moves on at once, and the legal notice's wait is 0 (the hook on
+Wait's seconds branch, 0x823A574C, shared with the crowd's claps: now `GHVanHalenScriptWaitSecondsHook` in
+`src/crowd.cpp`). The log says "[intro] boot video '...' skipped" for each. Checked: the title screen as soon as the
+game has loaded.
+
+## Drums, five or four lanes
+
+GH Metallica's of 2026-11-11 (SDK change 87, launcher 3.19.1; its `docs/drums.md`): Controls → a controller or the
+keyboard → Instrument: Drums, then Drum kit: 5 lanes (Guitar Hero) or 4 lanes (the game's Rock Band highway, as a Rock
+Band kit on the console). The same game code: `sub_823AFCB0` makes a drum kit (XInput subtype 8) the game's type 11,
+`sub_823AFF60` turns it into 10 (five lanes) at its first state read unless its capability flags have bit 0, and
+`UseFourLaneHighway` (`sub_8219B0F0` / `sub_8219AF80`) plays type 11 on the four-lane highway (`four_lane_highway`
+in this game's scripts too). The keyboard's drum keys are its own (D F J K L, four lanes K green; Space the kick,
+Backspace Star Power; `launcher/game.h`). Not played through a song here (nor in GH Metallica yet). **Off:**
+Instrument: Guitar.
+
+## Online play (experimental)
+
+GH Metallica's of 2026-11-12/13: the game's online modes between friends through Steam, `docs/online-play.md`.
+
+## The mouse cursor
+
+Hidden over the game after 2 seconds without moving it (SDK change 103): `docs/mouse-cursor.md`.
+
+## Settings > Audio and the graphics card
+
+Launcher 3.19 (SDK changes 85 and 86; GH Metallica's `docs/audio-and-gpu.md`): Settings → Audio (the output device by
+name, the channels, the volume, mute while another window is in front, low latency audio moved there from Game) and
+Settings → Graphics → the graphics card. Nothing of the game's own: the SDK reads `audio_output_device`,
+`audio_channels`, `audio_volume`, `audio_mute_unfocused` and `gpu_adapter`.

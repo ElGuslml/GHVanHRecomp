@@ -269,8 +269,8 @@ address = 0x824D5AB8   # fadds f0,f13,f0 (sub_824D5880's mode 2: the other phase
 name = "GHVanHalenLoadingWaveHook"
 registers = ["f0"]
 [[midasm_hook]]
-address = 0x823A574C   # bne cr6 (sub_823A5518, the script function Wait, its seconds branch): r4 = the wait in ms, r30 = the script; src/crowd.cpp
-name = "GHVanHalenCrowdBeatWaitHook"
+address = 0x823A574C   # bne cr6 (sub_823A5518, the script function Wait, its seconds branch): r4 = the wait in ms, r30 = the script; src/crowd.cpp (and src/intro.cpp's legal notice)
+name = "GHVanHalenScriptWaitSecondsHook"
 registers = ["r4", "r30"]
 
 # The screen effects each turned off by an option (src/screen_fx.cpp, ghvanhalen_fx_*): the effects' composite
@@ -279,3 +279,49 @@ registers = ["r4", "r30"]
 address = 0x825313F0   # mr r11,r24 (sub_825311C8), after lwz r31,12(r25): r31 = the effects' mask
 name = "GHVanHalenScreenFxMaskHook"
 registers = ["r31"]
+
+# GH Metallica's of 2026-11-11/13, at the instructions fmatch.py found (tools/port; the same instructions but the tap
+# trail's, where a device field before it is at 12624 instead of 13296).
+[[midasm_hook]]
+address = 0x8240D054   # mr r3,r31 at the end of sub_8240CFB0 (the online matchmaker's constructor: its times read)
+name = "GHVanHalenMatchmakerHook"
+registers = ["r31"]
+[[midasm_hook]]
+address = 0x823BD014   # stw r3,116(r1) in sub_823BD008 (a text's key -> its text in the player's language: r3 = the key)
+name = "GHVanHalenTextKeyHook"
+registers = ["r3"]
+[[midasm_hook]]
+address = 0x821C8A14   # lwz r11,12624(r20) in sub_821C82E8 (the tap notes' trail: its control points at r1 + 544)
+name = "GHVanHalenTapTrailHook"
+registers = ["r1"]
+
+# The game's debug menu offered in the main and pause menus (src/debug_menu.cpp, ghvanhalen_debug_menu): the script
+# global enable_button_cheats reads as 1 only in the scripts that build those menus. The script interpreter's
+# statement (sub_822E1468, r31 = the script) evaluates expressions with sub_823C1408 at two places (none of these
+# addresses is a branch target); sub_822CEBB8 resolves a "$name" component (r3) to the global's value.
+[[midasm_hook]]
+address = 0x822E1638   # lwz r3,16(r31), before bl 0x823C1408 at 0x822E163C
+name = "GHVanHalenScriptEvalEnterHook"
+registers = ["r31"]
+[[midasm_hook]]
+address = 0x822E1640   # stw r3,16(r31), after it
+name = "GHVanHalenScriptEvalLeaveHook"
+[[midasm_hook]]
+address = 0x822E194C   # bl 0x823C1408 (the other evaluation, reached past bne 0x822E1958)
+name = "GHVanHalenScriptEvalEnterHook"
+registers = ["r31"]
+[[midasm_hook]]
+address = 0x822E1950   # stw r3,16(r31), after it
+name = "GHVanHalenScriptEvalLeaveHook"
+[[midasm_hook]]
+address = 0x822CEBB8   # lbz r11,2(r3) (the entry of sub_822CEBB8): r3 = the component
+name = "GHVanHalenGlobalResolveHook"
+registers = ["r3"]
+return_on_true = true
+
+# The boot's videos skipped (src/intro.cpp, ghvanhalen_skip_intro): PlayMovie (sub_823E2D70) has read its `movie`
+# string into 84(r1); r3 = found. Not found returns false without playing.
+[[midasm_hook]]
+address = 0x823E2DF0   # clrlwi r11,r3,24 (then beq: return 0)
+name = "GHVanHalenPlayMovieHook"
+registers = ["r1", "r3"]

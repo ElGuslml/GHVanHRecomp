@@ -24,6 +24,9 @@ REXCVAR_DEFINE_BOOL(ghvanhalen_ultrawide, false, "GHVanHalen",
                     "Ultrawide on the Xenos path: the game's 3D views see as much more at the sides as the window is "
                     "wider than 16:9 (anamorphic, the presenter stretches the 1280x720 image; needs "
                     "present_letterbox = false). With NativeXRenderer, native_x_renderer_fill_screen does this instead");
+REXCVAR_DEFINE_BOOL(ghvanhalen_ultrawide_overlays, true, "GHVanHalen",
+                    "With ultrawide, in a song: a 2D overlay over the whole screen (the red border while the band is "
+                    "failing) covers the whole width; false = kept at 16:9 in the center with the HUD");
 REXCVAR_DEFINE_BOOL(ghvanhalen_ultrawide_hud, true, "GHVanHalen",
                     "With ghvanhalen_ultrawide: keep the HUD, the menus and the videos at 16:9 in the center "
                     "(false = stretched)");
@@ -88,6 +91,11 @@ class MenuBarsDialog : public rex::ui::ImGuiDialog {
 }  // namespace
 
 bool SongShown() { return DrawnRecently(g_highway_drawn); }
+
+bool LoadingShown() {
+  const uint8_t* base = GuestBase();
+  return base && base[0x82BFC6D0] != 0;
+}
 
 void SetOutputSize(uint32_t width, uint32_t height) {
   double factor = 1.0;
@@ -184,6 +192,21 @@ double NarrowFactor(const uint8_t* base) {
 }
 
 // The vertices' x (the first float of each, in pixels of the 1280x720 canvas) narrowed around the center.
+// Whether the vertices (x and y the first two floats of each, pixels of the 1280x720 canvas) are a piece of an
+// overlay of the whole screen: at least a quarter of the canvas (half its width and half its height) reaching one of
+// its sides and its top or bottom (GH5's rule: its red border is four such quarters, or one quad over the canvas).
+bool ScreenOverlayPiece(const uint8_t* base, uint32_t data, uint32_t count, uint32_t stride) {
+  float x0 = 1e9f, x1 = -1e9f, y0 = 1e9f, y1 = -1e9f;
+  for (uint32_t i = 0; i < count; ++i) {
+    const float x = LoadFloat(base, data + i * stride), y = LoadFloat(base, data + i * stride + 4);
+    x0 = std::min(x0, x);
+    x1 = std::max(x1, x);
+    y0 = std::min(y0, y);
+    y1 = std::max(y1, y);
+  }
+  return (x0 <= 0.5f || x1 >= 1279.5f) && (y0 <= 0.5f || y1 >= 719.5f) && x1 - x0 >= 639.5f && y1 - y0 >= 359.5f;
+}
+
 void NarrowVertices(uint8_t* base, double factor, uint32_t data, uint32_t count, uint32_t stride) {
   static std::atomic<bool> logged{false};
   if (!logged.exchange(true)) {
@@ -204,12 +227,24 @@ void NarrowVertices(uint8_t* base, double factor, uint32_t data, uint32_t count,
 //
 // [[midasm_hook]] at 0x82437190 in sub_82436F78, a sprite's quad: r6 = its 4 vertices (0x82C01F60), r7 = their stride
 // (28 or 36), before DrawVerticesUP.
+// In a song a sprite that is a piece of an overlay of the whole screen (the red border while the band is failing) is
+// left as it is, so the overlay is stretched over the whole width instead of a red frame around the middle 16:9
+// (ghvanhalen_ultrawide_overlays; GH Metallica's, GH5's and GH Warriors of Rock's fix).
 void GHVanHalenSpriteHook(PPCRegister& r6, PPCRegister& r7) {
   uint8_t* base = ghvanhalen::GuestBase();
   double factor = NarrowFactor(base);
-  if (factor != 1.0) {
-    NarrowVertices(base, factor, r6.u32, 4, r7.u32);
+  if (factor == 1.0) {
+    return;
   }
+  if (REXCVAR_GET(ghvanhalen_ultrawide_overlays) && ghvanhalen::SongShown() &&
+      ScreenOverlayPiece(base, r6.u32, 4, r7.u32)) {
+    static std::atomic<bool> logged{false};
+    if (!logged.exchange(true)) {
+      REXLOG_INFO("[ultrawide] a song's overlays over the whole screen cover the whole width");
+    }
+    return;
+  }
+  NarrowVertices(base, factor, r6.u32, 4, r7.u32);
 }
 
 // [[midasm_hook]] at 0x8247ACD0 in sub_8247A7E0, another screen element's quad (drawn by sub_8247AE28 for the loading
@@ -286,6 +321,33 @@ void GHVanHalenTailHook(PPCRegister& r5, PPCRegister& r6, PPCRegister& r7) {
   uint32_t c0 = LoadWord(base, kDevicePointer) + kVsConstants;
   StoreFloat(base, c0, float(640.0 + (LoadFloat(base, c0) - 640.0) / factor));
   StoreFloat(base, c0 + 12, float(LoadFloat(base, c0 + 12) / factor));
+}
+
+// [[midasm_hook]] at 0x821C8A14 in sub_821C82E8, the trail that joins tap notes (guitartaptrailcontrolpoints): r1 = its
+// stack (GH Metallica's 0x821B70DC in sub_821B69B0; the same code, a device field at another offset before it). Each
+// control point ({x, y} of a tap gem's screen element, pixels of the 1280x720 canvas) is copied to r1 + 544 (the first
+// once more before them, the last repeated after them, up to 34 more), and the vertex shader draws the curve from 34 of
+// them at a time. The gems are narrowed when drawn (the sprite hooks), their positions are not: the trail stayed where
+// the gems would be unnarrowed, beside its highway. Each point's x narrowed once here, after the copies are made and
+// before the first batch.
+void GHVanHalenTapTrailHook(PPCRegister& r1) {
+  uint8_t* base = ghvanhalen::GuestBase();
+  double factor = NarrowFactor(base);
+  if (factor == 1.0) {
+    return;
+  }
+  // guitartaptrailcontrolpointcount, as sub_821C82E8 kept it ([0x82843150]); the batches read up to 31 * ((n - 1) /
+  // 34) + 33 < n + 34 points.
+  constexpr uint32_t kTapTrailPointCount = 0x82843150;
+  constexpr uint32_t kPoints = 544;
+  int32_t count = int32_t(LoadWord(base, kTapTrailPointCount));
+  if (count <= 0 || count > 256) {
+    return;
+  }
+  for (int32_t i = 0; i < count + 34; ++i) {
+    uint32_t x = r1.u32 + kPoints + uint32_t(i) * 16;
+    StoreFloat(base, x, float(640.0 + (LoadFloat(base, x) - 640.0) / factor));
+  }
 }
 
 // [[midasm_hook]] at 0x821C4DD0 in sub_821C4810, a sprite drawn as a grid of quads (the highway's board): r3 = the

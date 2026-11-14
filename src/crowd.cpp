@@ -22,6 +22,8 @@
 #include <cstring>
 #include <optional>
 
+#include "intro.h"
+
 REXCVAR_DEFINE_BOOL(ghvanhalen_crowd_claps_fix, true, "GHVanHalen",
                     "The crowd's claps on star power keep time with the music whatever the audio and video "
                     "calibration (the game claps late by the calibration); false: as on the console");
@@ -83,12 +85,16 @@ uint32_t ScriptName(const uint8_t* base, uint32_t script) { return script ? Load
 
 // [[midasm_hook]] 0x823A574C (the script function Wait, sub_823A5518, its seconds branch): r4 = the wait in
 // milliseconds, r30 = the script. The fretbar handler's wait is shortened by the calibration.
-void GHVanHalenCrowdBeatWaitHook(PPCRegister& r4, PPCRegister& r30) {
-  if (!REXCVAR_GET(ghvanhalen_crowd_claps_fix)) {
+void GHVanHalenScriptWaitSecondsHook(PPCRegister& r4, PPCRegister& r30) {
+  const uint8_t* base = GuestBase();
+  if (!base) {
     return;
   }
-  const uint8_t* base = GuestBase();
-  if (!base || ScriptName(base, r30.u32) != kFretbarHandlerScript) {
+  // The boot's legal notice is not waited for while the intro is skipped (src/intro.cpp: one hook per address, so this
+  // one serves both).
+  const uint32_t script = ScriptName(base, r30.u32);
+  r4.u64 = ghvanhalen::IntroWaitMs(script, r4.u32);
+  if (!REXCVAR_GET(ghvanhalen_crowd_claps_fix) || script != kFretbarHandlerScript) {
     return;
   }
   const auto calibrated = ScriptGlobal(base, kCalibratedOffset);
